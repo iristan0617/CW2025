@@ -29,6 +29,7 @@ This is a Maven-based JavaFX project. To compile and run:
 ### New Java Classes
 
 ### Modified Java Classes
+- `GameController.java` - Replaced numbers with constants
 
 ### Unexpected Problems
 
