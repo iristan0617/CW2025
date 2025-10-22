@@ -1,6 +1,6 @@
 # COMP2042 COURSEWORK
 
-**Student Name:** 20611068
+**Student ID:** 20611068
 
 **GitHub Repository:** https://github.com/iristan0617/CW2025.git
 
