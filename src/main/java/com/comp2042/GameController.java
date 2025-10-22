@@ -2,7 +2,9 @@ package com.comp2042;
 
 public class GameController implements InputEventListener {
 
-    private Board board = new SimpleBoard(25, 10);
+    private static final int BOARD_HEIGHT = 25;
+    private static final int BOARD_WIDTH = 10;
+    private Board board = new SimpleBoard(BOARD_HEIGHT, BOARD_WIDTH);
 
     private final GuiController viewGuiController;
 
@@ -17,25 +19,39 @@ public class GameController implements InputEventListener {
     @Override
     public DownData onDownEvent(MoveEvent event) {
         boolean canMove = board.moveBrickDown();
-        ClearRow clearRow = null;
+
         if (!canMove) {
-            board.mergeBrickToBackground();
-            clearRow = board.clearRows();
-            if (clearRow.getLinesRemoved() > 0) {
-                board.getScore().add(clearRow.getScoreBonus());
-            }
-            if (board.createNewBrick()) {
-                viewGuiController.gameOver();
-            }
-
-            viewGuiController.refreshGameBackground(board.getBoardMatrix());
-
+            return handleBrickPlacement(event);
         } else {
-            if (event.getEventSource() == EventSource.USER) {
-                board.getScore().add(1);
-            }
+            return handleSuccessfulMove(event);
         }
+    }
+
+    private DownData handleBrickPlacement(MoveEvent event) {
+        board.mergeBrickToBackground();
+        ClearRow clearRow = clearCompletedRows();
+
+        if (board.createNewBrick()) {
+            viewGuiController.gameOver();
+        }
+
+        viewGuiController.refreshGameBackground(board.getBoardMatrix());
         return new DownData(clearRow, board.getViewData());
+    }
+
+    private ClearRow clearCompletedRows() {
+        ClearRow clearRow = board.clearRows();
+        if (clearRow.getLinesRemoved() > 0) {
+            board.getScore().add(clearRow.getScoreBonus());
+        }
+        return clearRow;
+    }
+
+    private DownData handleSuccessfulMove(MoveEvent event) {
+        if (event.getEventSource() == EventSource.USER) {
+            board.getScore().add(1);
+        }
+        return new DownData(null, board.getViewData());
     }
 
     @Override
