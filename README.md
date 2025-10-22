@@ -29,7 +29,8 @@ This is a Maven-based JavaFX project. To compile and run:
 ### New Java Classes
 
 ### Modified Java Classes
-- `GameController.java` - Replaced numbers with constants
+- `GameController.java` - Replaced magic numbers with constants
+- `SimpleBoard.java` - Extracted movement logic, replaced magic numbers
 
 ### Unexpected Problems
 
@@ -38,7 +39,7 @@ This is a Maven-based JavaFX project. To compile and run:
 - Configured IDE for proper execution
 - Documented compilation process
 
-## Next Steps
-- Begin code analysis and refactoring
-- Identify areas for improvement
-- Plan feature additions
+### Completed Refactorings
+1. **GameController** - Replaced magic numbers with constants
+2. **SimpleBoard** - Extracted duplicated movement logic into `attemptMove()` method
+3. **SimpleBoard** - Replaced magic numbers for starting position
