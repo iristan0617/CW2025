@@ -31,6 +31,7 @@ This is a Maven-based JavaFX project. To compile and run:
 ### Modified Java Classes
 - `GameController.java` - Replaced magic numbers with constants
 - `SimpleBoard.java` - Extracted movement logic, replaced magic numbers
+- `MatrixOperations` - Renamed `checkOutOfBound()` to `isOutOfBounds()`, added `BASE_SCORE_PER_ROW` constant
 
 ### Unexpected Problems
 
@@ -43,3 +44,4 @@ This is a Maven-based JavaFX project. To compile and run:
 1. **GameController** - Replaced magic numbers with constants
 2. **SimpleBoard** - Extracted duplicated movement logic into `attemptMove()` method
 3. **SimpleBoard** - Replaced magic numbers for starting position
+4. **MatrixOperations**: Split `checkRemoving()` into 4 focused methods
