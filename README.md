@@ -16,15 +16,23 @@ This is a Maven-based JavaFX project. To compile and run:
 ## Current Status
 
 ### Implemented and Working Properly
-- Basic Tetris game mechanics (movement, rotation, line clearing)
+- Basic Tetris gameplay (movement, rotation, line clearing)
+- Game over detection
 - JavaFX graphical interface
-- Maven build configuration
+- Next piece preview
+- Score system
+
+
 
 ### Implemented but Not Working Properly
 - [To be determined during development]
 
 ### Features Not Implemented
-- [To be determined during development]
+- Hold piece functionality
+- Level progression system
+- High score persistence
+- Sound effects
+- Pause menu
 
 ### New Java Classes
 
@@ -32,6 +40,8 @@ This is a Maven-based JavaFX project. To compile and run:
 - `GameController.java` - Replaced magic numbers with constants
 - `SimpleBoard.java` - Extracted movement logic, replaced magic numbers
 - `MatrixOperations` - Renamed `checkOutOfBound()` to `isOutOfBounds()`, added `BASE_SCORE_PER_ROW` constant
+- `gameLayout.fxml` - Added next brick preview panel and score display
+- `GuiController.java` - Added next brick initialization and update methods
 
 ### Unexpected Problems
 
@@ -45,3 +55,7 @@ This is a Maven-based JavaFX project. To compile and run:
 2. **SimpleBoard** - Extracted duplicated movement logic into `attemptMove()` method
 3. **SimpleBoard** - Replaced magic numbers for starting position
 4. **MatrixOperations**: Split `checkRemoving()` into 4 focused methods
+5. **UI Addition:** Added new `GridPane` in FXML for next piece display
+6. **Controller Updates:** Extended `GuiController` with next brick rendering logic
+7. **Architecture:** Leverages existing `ViewData` class which already had `nextBrickData` support
+8. **Automatic Updates:** Preview updates in real-time as pieces move
