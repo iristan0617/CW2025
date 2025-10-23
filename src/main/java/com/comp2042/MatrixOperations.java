@@ -8,10 +8,10 @@ import java.util.stream.Collectors;
 
 public class MatrixOperations {
 
+    private static final int BASE_SCORE_PER_ROW = 50;
 
-    //We don't want to instantiate this utility class
-    private MatrixOperations(){
-
+    // We don't want to instantiate this utility class
+    private MatrixOperations() {
     }
 
     public static boolean intersect(final int[][] matrix, final int[][] brick, int x, int y) {
@@ -19,7 +19,7 @@ public class MatrixOperations {
             for (int j = 0; j < brick[i].length; j++) {
                 int targetX = x + i;
                 int targetY = y + j;
-                if (brick[j][i] != 0 && (checkOutOfBound(matrix, targetX, targetY) || matrix[targetY][targetX] != 0)) {
+                if (brick[j][i] != 0 && (isOutOfBounds(matrix, targetX, targetY) || matrix[targetY][targetX] != 0)) {
                     return true;
                 }
             }
@@ -27,12 +27,8 @@ public class MatrixOperations {
         return false;
     }
 
-    private static boolean checkOutOfBound(int[][] matrix, int targetX, int targetY) {
-        boolean returnValue = true;
-        if (targetX >= 0 && targetY < matrix.length && targetX < matrix[targetY].length) {
-            returnValue = false;
-        }
-        return returnValue;
+    private static boolean isOutOfBounds(int[][] matrix, int x, int y) {
+        return x < 0 || y < 0 || y >= matrix.length || x >= matrix[y].length;
     }
 
     public static int[][] copy(int[][] original) {
@@ -61,39 +57,54 @@ public class MatrixOperations {
     }
 
     public static ClearRow checkRemoving(final int[][] matrix) {
-        int[][] tmp = new int[matrix.length][matrix[0].length];
         Deque<int[]> newRows = new ArrayDeque<>();
-        List<Integer> clearedRows = new ArrayList<>();
+        List<Integer> clearedRows = identifyCompletedRows(matrix, newRows);
+        int[][] newMatrix = buildNewMatrix(matrix, newRows);
+        int scoreBonus = calculateScoreBonus(clearedRows.size());
 
+        return new ClearRow(clearedRows.size(), newMatrix, scoreBonus);
+    }
+
+    private static List<Integer> identifyCompletedRows(int[][] matrix, Deque<int[]> newRows) {
+        List<Integer> clearedRows = new ArrayList<>();
         for (int i = 0; i < matrix.length; i++) {
-            int[] tmpRow = new int[matrix[i].length];
-            boolean rowToClear = true;
-            for (int j = 0; j < matrix[0].length; j++) {
-                if (matrix[i][j] == 0) {
-                    rowToClear = false;
-                }
-                tmpRow[j] = matrix[i][j];
-            }
-            if (rowToClear) {
+            int[] currentRow = matrix[i];
+            if (isRowComplete(currentRow)) {
                 clearedRows.add(i);
             } else {
-                newRows.add(tmpRow);
+                newRows.add(currentRow);
             }
         }
+        return clearedRows;
+    }
+
+    private static boolean isRowComplete(int[] row) {
+        for (int cell : row) {
+            if (cell == 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static int[][] buildNewMatrix(int[][] matrix, Deque<int[]> newRows) {
+        int[][] newMatrix = new int[matrix.length][matrix[0].length];
         for (int i = matrix.length - 1; i >= 0; i--) {
             int[] row = newRows.pollLast();
             if (row != null) {
-                tmp[i] = row;
+                newMatrix[i] = row;
             } else {
                 break;
             }
         }
-        int scoreBonus = 50 * clearedRows.size() * clearedRows.size();
-        return new ClearRow(clearedRows.size(), tmp, scoreBonus);
+        return newMatrix;
     }
 
-    public static List<int[][]> deepCopyList(List<int[][]> list){
+    private static int calculateScoreBonus(int clearedRowsCount) {
+        return BASE_SCORE_PER_ROW * clearedRowsCount * clearedRowsCount;
+    }
+
+    public static List<int[][]> deepCopyList(List<int[][]> list) {
         return list.stream().map(MatrixOperations::copy).collect(Collectors.toList());
     }
-
 }

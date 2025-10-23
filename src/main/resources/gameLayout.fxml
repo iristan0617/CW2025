@@ -13,6 +13,16 @@
         <center>
             <GridPane fx:id="gamePanel" hgap="1" vgap="1" layoutY="30" layoutX="40"/>
         </center>
+        <right>
+            <VBox spacing="10" alignment="TOP_CENTER" style="-fx-padding: 20;">
+                <Label text="NEXT" style="-fx-font-size: 16; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                <GridPane fx:id="nextBrickPanel" vgap="1" hgap="1" style="-fx-background-color: rgba(0,0,0,0.3); -fx-padding: 5;"/>
+                <VBox spacing="5" alignment="CENTER">
+                    <Label text="SCORE" style="-fx-font-size: 14; -fx-text-fill: white;"/>
+                    <Label fx:id="scoreLabel" text="0" style="-fx-font-size: 18; -fx-text-fill: yellow; -fx-font-weight: bold;"/>
+                </VBox>
+            </VBox>
+        </right>
     </BorderPane>
 
     <Group fx:id="groupNotification" layoutX="14" layoutY="203">
