@@ -4,6 +4,7 @@
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.Group?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Text?>
 <?import java.net.URL?>
 <Pane fx:controller="com.comp2042.GuiController"
@@ -30,7 +31,22 @@
             <GameOverPanel fx:id="gameOverPanel"/>
         </VBox>
     </Group>
+
+    <Group fx:id="pauseOverlay" visible="false">
+        <Rectangle width="300" height="510" fill="rgba(0,0,0,0.7)"/>
+        <VBox alignment="CENTER" spacing="20" layoutX="150" layoutY="255" translateX="-150" translateY="-100">
+            <Label text="PAUSED" style="-fx-font-size: 36; -fx-text-fill: white; -fx-font-weight: bold;"/>
+            <Label text="Press P to Resume" style="-fx-font-size: 18; -fx-text-fill: lightgray;"/>
+            <HBox spacing="15" alignment="CENTER">
+                <Button text="Resume" onAction="#resumeGame" style="-fx-font-size: 14;"/>
+                <Button text="New Game" onAction="#newGame" style="-fx-font-size: 14;"/>
+                <Button text="Quit" onAction="#quitGame" style="-fx-font-size: 14;"/>
+            </HBox>
+        </VBox>
+    </Group>
+
     <stylesheets>
         <URL value="@window_style.css"/>
     </stylesheets>
+
 </Pane>

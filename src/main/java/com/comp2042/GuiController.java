@@ -14,6 +14,11 @@ import javafx.scene.effect.Reflection;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
@@ -41,6 +46,9 @@ public class GuiController implements Initializable {
 
     @FXML
     private GameOverPanel gameOverPanel;
+
+    @FXML
+    private Group pauseOverlay;  // Pause menu
 
     private Rectangle[][] displayMatrix;
     private Rectangle[][] rectangles;
@@ -80,6 +88,14 @@ public class GuiController implements Initializable {
                         keyEvent.consume();
                     }
                 }
+                if (keyEvent.getCode() == KeyCode.N) {
+                    newGame(null);
+                }
+                if (keyEvent.getCode() == KeyCode.P && isGameOver.getValue() == Boolean.FALSE) {
+                    togglePause();
+                    keyEvent.consume();
+                }
+
                 if (keyEvent.getCode() == KeyCode.N) {
                     newGame(null);
                 }
@@ -245,6 +261,7 @@ public class GuiController implements Initializable {
     public void newGame(ActionEvent actionEvent) {
         timeLine.stop();
         gameOverPanel.setVisible(false);
+        pauseOverlay.setVisible(false);
         eventListener.createNewGame();
         gamePanel.requestFocus();
         timeLine.play();
@@ -254,5 +271,35 @@ public class GuiController implements Initializable {
 
     public void pauseGame(ActionEvent actionEvent) {
         gamePanel.requestFocus();
+    }
+
+    public void togglePause() {
+        if (isGameOver.getValue() == Boolean.FALSE) {
+            boolean newPauseState = !isPause.getValue();
+            isPause.setValue(newPauseState);
+
+            if (newPauseState) {
+                // Pausing the game
+                timeLine.pause();
+                pauseOverlay.setVisible(true);
+            } else {
+                // Resuming the game
+                timeLine.play();
+                pauseOverlay.setVisible(false);
+            }
+            gamePanel.requestFocus();
+        }
+    }
+
+    public void resumeGame(ActionEvent actionEvent) {
+        if (isPause.getValue() == Boolean.TRUE) {
+            togglePause();
+        }
+    }
+
+    public void quitGame(ActionEvent actionEvent) {
+        // For a simple implementation, we'll just exit
+        // In a full implementation, you might return to main menu
+        System.exit(0);
     }
 }
