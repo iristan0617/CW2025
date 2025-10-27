@@ -21,6 +21,7 @@ This is a Maven-based JavaFX project. To compile and run:
 - JavaFX graphical interface
 - Next piece preview
 - Score system
+- Pause menu
 
 
 
@@ -32,7 +33,6 @@ This is a Maven-based JavaFX project. To compile and run:
 - Level progression system
 - High score persistence
 - Sound effects
-- Pause menu
 
 ### New Java Classes
 
@@ -42,6 +42,7 @@ This is a Maven-based JavaFX project. To compile and run:
 - `MatrixOperations` - Renamed `checkOutOfBound()` to `isOutOfBounds()`, added `BASE_SCORE_PER_ROW` constant
 - `gameLayout.fxml` - Added next brick preview panel and score display
 - `GuiController.java` - Added next brick initialization and update methods
+- `gameLayout.fxml`, `GuiController.java` - Professional pause menu activated by P key serving Resume, New Game, and Quit functionality
 
 ### Unexpected Problems
 
@@ -55,7 +56,7 @@ This is a Maven-based JavaFX project. To compile and run:
 2. **SimpleBoard** - Extracted duplicated movement logic into `attemptMove()` method
 3. **SimpleBoard** - Replaced magic numbers for starting position
 4. **MatrixOperations**: Split `checkRemoving()` into 4 focused methods
-5. **UI Addition:** Added new `GridPane` in FXML for next piece display
+5. **UI Addition:** Added new `GridPane` in FXML for next piece display 
 6. **Controller Updates:** Extended `GuiController` with next brick rendering logic
 7. **Architecture:** Leverages existing `ViewData` class which already had `nextBrickData` support
 8. **Automatic Updates:** Preview updates in real-time as pieces move
