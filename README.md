@@ -26,7 +26,7 @@ This is a Maven-based JavaFX project. To compile and run:
 
 
 ### Implemented but Not Working Properly
-- [To be determined during development]
+- Scoring system not updating
 
 ### Features Not Implemented
 - Hold piece functionality
@@ -52,11 +52,12 @@ This is a Maven-based JavaFX project. To compile and run:
 - Documented compilation process
 
 ### Completed Refactorings
-1. **GameController** - Replaced magic numbers with constants
-2. **SimpleBoard** - Extracted duplicated movement logic into `attemptMove()` method
-3. **SimpleBoard** - Replaced magic numbers for starting position
+1. **GameController:** Replaced magic numbers with constants
+2. **SimpleBoard:**  Extracted duplicated movement logic into `attemptMove()` method
+3. **SimpleBoard:**  Replaced magic numbers for starting position
 4. **MatrixOperations**: Split `checkRemoving()` into 4 focused methods
 5. **UI Addition:** Added new `GridPane` in FXML for next piece display 
 6. **Controller Updates:** Extended `GuiController` with next brick rendering logic
 7. **Architecture:** Leverages existing `ViewData` class which already had `nextBrickData` support
 8. **Automatic Updates:** Preview updates in real-time as pieces move
+9. **Package organisation:**  Clear separation of Model, View, Controller for better code navigation, simplified testing and maintenance
