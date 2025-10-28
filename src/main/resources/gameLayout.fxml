@@ -22,6 +22,10 @@
                     <Label text="SCORE" style="-fx-font-size: 14; -fx-text-fill: white;"/>
                     <Label fx:id="scoreLabel" text="0" style="-fx-font-size: 18; -fx-text-fill: yellow; -fx-font-weight: bold;"/>
                 </VBox>
+                <VBox spacing="5" alignment="CENTER">
+                    <Label text="LINES" style="-fx-font-size: 14; -fx-text-fill: white;"/>
+                    <Label fx:id="linesLabel" text="0" style="-fx-font-size: 18; -fx-text-fill: cyan; -fx-font-weight: bold;"/>
+                </VBox>
             </VBox>
         </right>
     </BorderPane>

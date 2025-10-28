@@ -24,6 +24,7 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
+import javafx.scene.control.Label;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -49,6 +50,13 @@ public class GuiController implements Initializable {
 
     @FXML
     private Group pauseOverlay;  // Pause menu
+
+    @FXML
+    private Label scoreLabel;  // Scoring
+
+    @FXML
+    private Label linesLabel; // Lines
+
 
     private Rectangle[][] displayMatrix;
     private Rectangle[][] rectangles;
@@ -249,7 +257,15 @@ public class GuiController implements Initializable {
     }
 
     public void bindScore(IntegerProperty integerProperty) {
-        // TODO: Implement score binding in future
+        if (scoreLabel != null && integerProperty != null) {
+            scoreLabel.textProperty().bind(integerProperty.asString());
+        }
+    }
+
+    public void bindLines(IntegerProperty integerProperty) {
+        if (linesLabel != null && integerProperty != null) {
+            linesLabel.textProperty().bind(integerProperty.asString());
+        }
     }
 
     public void gameOver() {

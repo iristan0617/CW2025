@@ -14,6 +14,7 @@ public class GameController implements InputEventListener {
         viewGuiController.setEventListener(this);
         viewGuiController.initGameView(board.getBoardMatrix(), board.getViewData());
         viewGuiController.bindScore(board.getScore().scoreProperty());
+        viewGuiController.bindLines(board.getScore().linesProperty());
     }
 
     @Override
@@ -43,6 +44,7 @@ public class GameController implements InputEventListener {
         ClearRow clearRow = board.clearRows();
         if (clearRow.getLinesRemoved() > 0) {
             board.getScore().add(clearRow.getScoreBonus());
+            board.getScore().addLines(clearRow.getLinesRemoved());
         }
         return clearRow;
     }
