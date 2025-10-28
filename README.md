@@ -39,10 +39,12 @@ This is a Maven-based JavaFX project. To compile and run:
 ### Modified Java Classes
 - `GameController.java` - Replaced magic numbers with constants
 - `SimpleBoard.java` - Extracted movement logic, replaced magic numbers
+- `MatrixOperations` - Decomposed complex `checkRemoving()` into 4 focused methods
 - `MatrixOperations` - Renamed `checkOutOfBound()` to `isOutOfBounds()`, added `BASE_SCORE_PER_ROW` constant
 - `gameLayout.fxml` - Added next brick preview panel and score display
 - `GuiController.java` - Added next brick initialization and update methods
 - `gameLayout.fxml`, `GuiController.java` - Professional pause menu activated by P key serving Resume, New Game, and Quit functionality
+-  `gameLayout.fxml`, `GuiController.java`, `Score.java`, `GameController.java` - Enhanced with score and lines updates for display and property binding
 
 ### Unexpected Problems
 
