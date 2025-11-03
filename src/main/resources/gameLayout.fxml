@@ -1,4 +1,4 @@
-<?import com.comp2042.GameOverPanel?>
+<?import view.GameOverPanel?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ToggleButton?>
@@ -6,20 +6,21 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Text?>
 <?import java.net.URL?>
-<Pane fx:controller="com.comp2042.GuiController"
+<Pane fx:controller="controller.GuiController"
       xmlns:fx="http://javafx.com/fxml">
     <GridPane fx:id="brickPanel" vgap="1" hgap="1"/>
     <BorderPane styleClass="gameBoard" fx:id="gameBoard">
         <center>
-            <GridPane fx:id="gamePanel" hgap="1" vgap="1" layoutY="30" layoutX="40"/>
+            <StackPane fx:id="boardStack">
+                <GridPane fx:id="gamePanel" hgap="1" vgap="1"/>
+                <StackPane fx:id="groupNotification" pickOnBounds="false">
+                    <VBox alignment="CENTER">
+                        <GameOverPanel fx:id="gameOverPanel"/>
+                    </VBox>
+                </StackPane>
+            </StackPane>
         </center>
     </BorderPane>
-
-    <Group fx:id="groupNotification" layoutX="14" layoutY="203">
-        <VBox alignment="CENTER">
-            <GameOverPanel fx:id="gameOverPanel"/>
-        </VBox>
-    </Group>
     <stylesheets>
         <URL value="@window_style.css"/>
     </stylesheets>
