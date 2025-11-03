@@ -1,4 +1,4 @@
-package com.comp2042;
+package controller;
 
 public enum EventType {
     DOWN, LEFT, RIGHT, ROTATE

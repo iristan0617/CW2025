@@ -1,4 +1,6 @@
-package com.comp2042;
+package model;
+
+import view.ClearRow;
 
 public final class DownData {
     private final ClearRow clearRow;

@@ -1,4 +1,4 @@
-package com.comp2042;
+package model;
 
 public final class ViewData {
 

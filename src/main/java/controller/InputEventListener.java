@@ -1,4 +1,7 @@
-package com.comp2042;
+package controller;
+
+import model.DownData;
+import model.ViewData;
 
 public interface InputEventListener {
 
