@@ -14,6 +14,7 @@ https://github.com/iristan0617/CW2025.git
 - Collision Detection: Pieces cannot move through walls or settled blocks
 - Game Over Detection: Game ends when blocks reach the top of the playing field
 - Maven Build System: Project successfully compiles and runs via mvn javafx:run
+- Dynamic Game Board Centering: Game board automatically centers in window
 
 ## Implemented but Not Working Properly
 - [Feature with issues]
@@ -27,8 +28,12 @@ https://github.com/iristan0617/CW2025.git
 - [Class Name]: [Purpose] - [Location]
 
 ## Modified Java Classes
-- [Class Name]: [Changes made] - [Reason for changes]
+- Reorganized all classes into MVC architecture
+- Model: Game logic classes
+- View: UI components
+- Controller: Input/coordination
+- Improved code structure
+- GuiController: Added dynamic game board centering system
 
 ## Unexpected Problems
-- [Problem 1]: [Solution/attempted resolution]
-- [Problem 2]: [Solution/attempted resolution]
+- Game panel is twitching a bit
