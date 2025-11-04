@@ -9,6 +9,9 @@ import javafx.stage.Stage;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import controller.GuiController;
+import controller.GameController;
+
 public class Main extends Application {
 
     @Override
