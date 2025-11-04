@@ -39,7 +39,7 @@ import java.util.ResourceBundle;
 
 public class GuiController implements Initializable {
 
-    private static final int BRICK_SIZE = 20;
+    private static final int BRICK_SIZE = 22;
 
 
     @FXML
@@ -56,6 +56,9 @@ public class GuiController implements Initializable {
 
     @FXML
     private BorderPane gameBoard;
+
+    @FXML
+    private StackPane boardStack;
 
     private Rectangle[][] displayMatrix;
 
@@ -131,6 +134,8 @@ public class GuiController implements Initializable {
         int rowsVisible = boardMatrix.length - 2;
         double w = cols * BRICK_SIZE + (cols - 1) * gamePanel.getHgap();
         double h = rowsVisible * BRICK_SIZE + (rowsVisible - 1) * gamePanel.getVgap();
+        w += 2;
+        h += 4;
         gamePanel.setPrefSize(w, h);
         gamePanel.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
         gamePanel.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
@@ -206,9 +211,12 @@ public class GuiController implements Initializable {
     }
 
     public void refreshGameBackground(int[][] board) {
-        for (int i = 2; i < board.length; i++) {
-            for (int j = 0; j < board[i].length; j++) {
-                setRectangleData(board[i][j], displayMatrix[i][j]);
+        // Ensure we update ALL visible cells, including those that should be cleared
+        for (int i = 2; i < board.length && i < displayMatrix.length; i++) {
+            for (int j = 0; j < board[i].length && j < displayMatrix[i].length; j++) {
+                if (displayMatrix[i][j] != null) {
+                    setRectangleData(board[i][j], displayMatrix[i][j]);
+                }
             }
         }
     }
