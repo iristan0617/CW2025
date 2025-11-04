@@ -60,8 +60,9 @@
 
 .gameOverStyle {
     -fx-font-family: "Let's go Digital";
-    -fx-font-size: 48;
+    -fx-font-size: 48px;
     -fx-background-color: red;
+    }
 }
 
 .scoreClass{
@@ -69,4 +70,17 @@
     -fx-font-size: 38;
     -fx-fill: yellow;
     -fx-text-fill: yellow;
+}
+
+.hud-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: yellow;
+}
+
+.hud-value {
+    -fx-font-family: "Let's go Digital";
+    -fx-font-size: 40px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
 }

@@ -16,6 +16,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Region;
+import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
@@ -59,6 +60,14 @@ public class GuiController implements Initializable {
 
     @FXML
     private StackPane boardStack;
+
+    @FXML
+    private Label scoreLabel;
+
+    @FXML
+    private Label linesLabel;
+
+    private int totalLinesCleared = 0;
 
     private Rectangle[][] displayMatrix;
 
@@ -104,6 +113,13 @@ public class GuiController implements Initializable {
             }
         });
         gameOverPanel.setVisible(false);
+        // Initialize score and lines labels
+        if (scoreLabel != null) {
+            scoreLabel.setText("0");
+        }
+        if (linesLabel != null) {
+            linesLabel.setText("0");
+        }
 
         Platform.runLater(() -> {
             Pane root = (Pane) gameBoard.getParent();
@@ -231,6 +247,9 @@ public class GuiController implements Initializable {
         if (isPause.getValue() == Boolean.FALSE) {
             DownData downData = eventListener.onDownEvent(event);
             if (downData.getClearRow() != null && downData.getClearRow().getLinesRemoved() > 0) {
+                // Update lines cleared
+                updateLinesCleared(downData.getClearRow().getLinesRemoved());
+
                 NotificationPanel notificationPanel = new NotificationPanel("+" + downData.getClearRow().getScoreBonus());
                 groupNotification.getChildren().add(notificationPanel);
                 notificationPanel.showScore(groupNotification.getChildren());
@@ -245,6 +264,31 @@ public class GuiController implements Initializable {
     }
 
     public void bindScore(IntegerProperty integerProperty) {
+        // Bind score label to score property
+        if (integerProperty != null) {
+            // Use Platform.runLater to ensure UI is ready
+            Platform.runLater(() -> {
+                if (scoreLabel != null) {
+                    scoreLabel.textProperty().bind(integerProperty.asString());
+                }
+            });
+        }
+    }
+
+    public void updateLinesCleared(int lines) {
+        if (lines > 0) {
+            totalLinesCleared += lines;
+            if (linesLabel != null) {
+                linesLabel.setText(String.valueOf(totalLinesCleared));
+            }
+        }
+    }
+
+    public void resetLinesCleared() {
+        totalLinesCleared = 0;
+        if (linesLabel != null) {
+            linesLabel.setText("0");
+        }
     }
 
     public void gameOver() {
@@ -256,6 +300,7 @@ public class GuiController implements Initializable {
     public void newGame(ActionEvent actionEvent) {
         timeLine.stop();
         gameOverPanel.setVisible(false);
+        resetLinesCleared(); // Reset lines count
         eventListener.createNewGame();
         gamePanel.requestFocus();
         timeLine.play();

@@ -8,6 +8,20 @@
 <?import java.net.URL?>
 <Pane fx:controller="controller.GuiController"
       xmlns:fx="http://javafx.com/fxml">
+
+    <!-- Score and Lines Display -->
+    <VBox alignment="TOP_LEFT" spacing="15" layoutX="480" layoutY="150">
+        <VBox alignment="CENTER_LEFT" spacing="5">
+            <Label text="SCORE:" styleClass="hud-title"/>
+            <Label fx:id="scoreLabel" text="0" styleClass="hud-value"/>
+        </VBox>
+
+        <VBox alignment="CENTER_LEFT" spacing="5">
+            <Label text="LINES:" styleClass="hud-title"/>
+            <Label fx:id="linesLabel" text="0" styleClass="hud-value"/>
+        </VBox>
+    </VBox>
+
     <GridPane fx:id="brickPanel" vgap="1" hgap="1"/>
     <BorderPane styleClass="gameBoard" fx:id="gameBoard">
         <center>
@@ -21,6 +35,7 @@
             </StackPane>
         </center>
     </BorderPane>
+
     <stylesheets>
         <URL value="@window_style.css"/>
     </stylesheets>
