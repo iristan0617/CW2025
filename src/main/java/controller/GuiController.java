@@ -67,9 +67,14 @@ public class GuiController implements Initializable {
     @FXML
     private Label linesLabel;
 
+    @FXML
+    private GridPane nextPanel;
+
     private int totalLinesCleared = 0;
 
     private Rectangle[][] displayMatrix;
+
+    private Rectangle[][] nextPreview;
 
     private InputEventListener eventListener;
 
@@ -223,6 +228,7 @@ public class GuiController implements Initializable {
                     setRectangleData(brick.getBrickData()[i][j], rectangles[i][j]);
                 }
             }
+            renderNextPreview(brick.getNextBrickData());
         }
     }
 
@@ -327,5 +333,19 @@ public class GuiController implements Initializable {
         Pane root = (Pane) gameBoard.getParent();
         Point2D scenePt = gamePanel.localToScene(0, 0);
         return root.sceneToLocal(scenePt);
+    }
+
+    private void renderNextPreview(int[][] next) {
+        if (next == null || next.length == 0) return;
+        nextPanel.getChildren().clear();
+        nextPreview = new Rectangle[next.length][next[0].length];
+        for (int i = 0; i < next.length; i++) {
+            for (int j = 0; j < next[i].length; j++) {
+                Rectangle r = new Rectangle(BRICK_SIZE, BRICK_SIZE);
+                r.setFill(getFillColor(next[i][j]));
+                nextPreview[i][j] = r;
+                nextPanel.add(r, j, i);
+            }
+        }
     }
 }

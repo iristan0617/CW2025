@@ -22,6 +22,12 @@
         </VBox>
     </VBox>
 
+    <!-- Next Piece Preview -->
+    <VBox alignment="CENTER" spacing="5" layoutX="1000" layoutY="140">
+        <Label text="NEXT:" styleClass="hud-title"/>
+        <GridPane fx:id="nextPanel" hgap="1" vgap="1" styleClass="nextBrick"/>
+    </VBox>
+
     <GridPane fx:id="brickPanel" vgap="1" hgap="1"/>
     <BorderPane styleClass="gameBoard" fx:id="gameBoard">
         <center>
