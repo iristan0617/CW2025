@@ -15,14 +15,15 @@ https://github.com/iristan0617/CW2025.git
 - Game Over Detection: Game ends when blocks reach the top of the playing field
 - Maven Build System: Project successfully compiles and runs via mvn javafx:run
 - Dynamic Game Board Centering: Game board automatically centers in window
+- Score and lines display
+- Next piece preview
 
 ## Implemented but Not Working Properly
 - [Feature with issues]
 - [Another feature with problems]
 
 ## Features Not Implemented
-- Score and lines display
-- Next piece preview
+- Pause menu display
 
 ## New Java Classes
 - [Class Name]: [Purpose] - [Location]
@@ -34,6 +35,9 @@ https://github.com/iristan0617/CW2025.git
 - Controller: Input/coordination
 - Improved code structure
 - GuiController: Added dynamic game board centering system
+- GuiController: Added score, lines and next piece preview
+- 
 
 ## Unexpected Problems
 - Game panel is twitching a bit
+- Bricks in the game board and next piece preview looks different
