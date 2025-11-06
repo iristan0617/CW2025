@@ -17,13 +17,14 @@ https://github.com/iristan0617/CW2025.git
 - Dynamic Game Board Centering: Game board automatically centers in window
 - Score and lines display
 - Next piece preview
+- Pause menu overlay
 
 ## Implemented but Not Working Properly
 - [Feature with issues]
 - [Another feature with problems]
 
 ## Features Not Implemented
-- Pause menu display
+- Pause menu buttons in game
 
 ## New Java Classes
 - [Class Name]: [Purpose] - [Location]
@@ -36,7 +37,7 @@ https://github.com/iristan0617/CW2025.git
 - Improved code structure
 - GuiController: Added dynamic game board centering system
 - GuiController: Added score, lines and next piece preview
-- 
+- GuiController: Added pause menu overlay
 
 ## Unexpected Problems
 - Game panel is twitching a bit
