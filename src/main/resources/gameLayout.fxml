@@ -1,48 +1,84 @@
 <?import view.GameOverPanel?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ToggleButton?>
-<?import javafx.scene.Group?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Text?>
 <?import java.net.URL?>
-<Pane fx:controller="controller.GuiController"
-      xmlns:fx="http://javafx.com/fxml">
+<StackPane fx:controller="controller.GuiController"
+           xmlns:fx="http://javafx.com/fxml"
+           style="-fx-background-image: url('background_image.png');">
 
-    <!-- Score and Lines Display -->
-    <VBox alignment="TOP_LEFT" spacing="15" layoutX="480" layoutY="150">
-        <VBox alignment="CENTER_LEFT" spacing="5">
-            <Label text="SCORE:" styleClass="hud-title"/>
-            <Label fx:id="scoreLabel" text="0" styleClass="hud-value"/>
+    <!-- Main game content -->
+    <Pane>
+        <!-- Score and Lines Display -->
+        <VBox alignment="TOP_LEFT" spacing="15" layoutX="480" layoutY="150">
+            <VBox alignment="CENTER_LEFT" spacing="5">
+                <Label text="SCORE:" styleClass="hud-title"/>
+                <Label fx:id="scoreLabel" text="0" styleClass="hud-value"/>
+            </VBox>
+            <VBox alignment="CENTER_LEFT" spacing="5">
+                <Label text="LINES:" styleClass="hud-title"/>
+                <Label fx:id="linesLabel" text="0" styleClass="hud-value"/>
+            </VBox>
         </VBox>
 
-        <VBox alignment="CENTER_LEFT" spacing="5">
-            <Label text="LINES:" styleClass="hud-title"/>
-            <Label fx:id="linesLabel" text="0" styleClass="hud-value"/>
+        <!-- Next Piece Preview -->
+        <VBox alignment="CENTER" spacing="5" layoutX="1000" layoutY="140">
+            <Label text="NEXT:" styleClass="hud-title"/>
+            <GridPane fx:id="nextPanel" hgap="1" vgap="1" styleClass="nextBrick"/>
         </VBox>
-    </VBox>
 
-    <!-- Next Piece Preview -->
-    <VBox alignment="CENTER" spacing="5" layoutX="1000" layoutY="140">
-        <Label text="NEXT:" styleClass="hud-title"/>
-        <GridPane fx:id="nextPanel" hgap="1" vgap="1" styleClass="nextBrick"/>
-    </VBox>
+        <GridPane fx:id="brickPanel" vgap="1" hgap="1"/>
 
-    <GridPane fx:id="brickPanel" vgap="1" hgap="1"/>
-    <BorderPane styleClass="gameBoard" fx:id="gameBoard">
-        <center>
-            <StackPane fx:id="boardStack">
-                <GridPane fx:id="gamePanel" hgap="1" vgap="1"/>
-                <StackPane fx:id="groupNotification" pickOnBounds="false">
-                    <VBox alignment="CENTER">
-                        <GameOverPanel fx:id="gameOverPanel"/>
-                    </VBox>
+        <BorderPane styleClass="gameBoard" fx:id="gameBoard">
+            <center>
+                <StackPane fx:id="boardStack">
+                    <GridPane fx:id="gamePanel" hgap="1" vgap="1"/>
+                    <StackPane fx:id="groupNotification" pickOnBounds="false">
+                        <VBox alignment="CENTER">
+                            <GameOverPanel fx:id="gameOverPanel"/>
+                        </VBox>
+                    </StackPane>
                 </StackPane>
-            </StackPane>
-        </center>
-    </BorderPane>
+            </center>
+        </BorderPane>
+    </Pane>
+
+    <!-- FULL-SCREEN PAUSE OVERLAY - Simplified without card -->
+    <StackPane fx:id="pauseOverlay"
+               visible="false"
+               style="-fx-background-color: rgba(0,0,0,0.85);"
+               alignment="CENTER">
+
+        <!-- Direct content in the overlay without card container -->
+        <VBox alignment="CENTER" spacing="30">
+            <!-- Title -->
+            <Label text="PAUSED" styleClass="pause-title" />
+
+            <!-- Subtitle -->
+            <Label text="Press P to Resume"
+                   style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #f2f2f2;" />
+
+            <!-- Buttons -->
+            <HBox alignment="CENTER" spacing="30">
+                <Button text="Resume"
+                        onAction="#onResume"
+                        styleClass="control-button--primary"
+                        style="-fx-pref-height: 80px; -fx-min-width: 220px; -fx-pref-width: 260px; -fx-font-size: 26px; -fx-font-weight: bold;" />
+
+                <Button text="New Game"
+                        onAction="#onRestart"
+                        styleClass="control-button--accent"
+                        style="-fx-pref-height: 80px; -fx-min-width: 220px; -fx-pref-width: 260px; -fx-font-size: 26px; -fx-font-weight: bold;" />
+
+                <Button text="Quit"
+                        onAction="#onQuit"
+                        styleClass="control-button--danger"
+                        style="-fx-pref-height: 80px; -fx-min-width: 180px; -fx-pref-width: 220px; -fx-font-size: 24px; -fx-font-weight: bold;" />
+            </HBox>
+        </VBox>
+    </StackPane>
 
     <stylesheets>
         <URL value="@window_style.css"/>
     </stylesheets>
-</Pane>
+</StackPane>
