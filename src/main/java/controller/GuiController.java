@@ -33,6 +33,7 @@ import javafx.geometry.Bounds;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.effect.Glow;
 
 import java.net.URL;
 import java.util.Optional;
@@ -152,7 +153,8 @@ public class GuiController implements Initializable {
         for (int i = 0; i < brick.getBrickData().length; i++) {
             for (int j = 0; j < brick.getBrickData()[i].length; j++) {
                 Rectangle rectangle = new Rectangle(BRICK_SIZE, BRICK_SIZE);
-                rectangle.setFill(getFillColor(brick.getBrickData()[i][j]));
+                //rectangle.setFill(getFillColor(brick.getBrickData()[i][j]));
+                setRectangleData(brick.getBrickData()[i][j], rectangle);
                 rectangles[i][j] = rectangle;
                 brickPanel.add(rectangle, j, i);
             }
@@ -210,8 +212,18 @@ public class GuiController implements Initializable {
 
     private void setRectangleData(int color, Rectangle rectangle) {
         rectangle.setFill(getFillColor(color));
-        rectangle.setArcHeight(9);
-        rectangle.setArcWidth(9);
+        rectangle.setArcHeight(0);
+        rectangle.setArcWidth(0);
+
+
+        // Add glow effect
+        if (color != 0) { // Only glow non-transparent bricks
+            javafx.scene.effect.Glow glow = new javafx.scene.effect.Glow();
+            glow.setLevel(0.6); // Adjust between 0.0 (no glow) and 1.0 (maximum glow)
+            rectangle.setEffect(glow);
+        } else {
+            rectangle.setEffect(null); // No glow for transparent bricks
+        }
     }
 
     private void moveDown(MoveEvent event) {
