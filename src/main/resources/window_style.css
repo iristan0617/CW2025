@@ -135,3 +135,25 @@
     -fx-scale-x: 1.0;
     -fx-scale-y: 1.0;
 }
+
+.mainMenuButton {
+    -fx-background-color: linear-gradient(to bottom, #ffffff, #dcdcdc);
+    -fx-text-fill: #1a1a1a;
+    -fx-border-color: rgba(0,0,0,0.2);
+    -fx-border-width: 2;
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 10, 0.4, 0, 3);
+}
+
+.mainMenuButton:hover {
+    -fx-background-color: linear-gradient(to bottom, #ffffff, #f0f0f0);
+    -fx-text-fill: #111111;
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.mainMenuButton:pressed {
+    -fx-background-color: linear-gradient(to bottom, #dcdcdc, #c0c0c0);
+    -fx-text-fill: #000000;
+}

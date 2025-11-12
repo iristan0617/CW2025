@@ -58,11 +58,13 @@ public class GuiController implements Initializable {
     @FXML private Label linesLabel;
     @FXML private GridPane nextPanel;
     @FXML private StackPane pauseOverlay;
+    @FXML private StackPane mainMenuOverlay;
     @FXML private StackPane rootStackPane; // Root StackPane from FXML
 
     private int totalLinesCleared = 0;
     private MediaPlayer mediaPlayer;
     private MediaView mediaView;
+    private GameController gameController;
 
     private Rectangle[][] displayMatrix;
     private Rectangle[][] nextPreview;
@@ -124,9 +126,30 @@ public class GuiController implements Initializable {
 
         gameOverPanel.setVisible(false);
         if (pauseOverlay != null) pauseOverlay.setVisible(false);
+        // Main menu is visible by default
+        if (mainMenuOverlay != null) mainMenuOverlay.setVisible(true);
 
         if (scoreLabel != null) scoreLabel.setText("0");
         if (linesLabel != null) linesLabel.setText("0");
+        
+        // Hide game content initially (will be shown when Start is clicked)
+        // Game content will be shown when Start button is clicked
+        Platform.runLater(() -> {
+            if (gameBoard != null) gameBoard.setVisible(false);
+            // Hide score and next panel containers
+            if (scoreLabel != null) {
+                Node parent = scoreLabel.getParent();
+                if (parent != null && parent.getParent() != null) {
+                    parent.getParent().setVisible(false);
+                }
+            }
+            if (nextPanel != null) {
+                Node parent = nextPanel.getParent();
+                if (parent != null) {
+                    parent.setVisible(false);
+                }
+            }
+        });
 
         Platform.runLater(() -> {
             Pane root = (Pane) gameBoard.getParent();
@@ -551,12 +574,111 @@ public class GuiController implements Initializable {
     }
 
     @FXML
-    private void onQuit(ActionEvent e) {
+    private void onStartGame(ActionEvent e) {
+        // Hide main menu
+        if (mainMenuOverlay != null) {
+            mainMenuOverlay.setVisible(false);
+        }
+        
+        // Show game content
+        if (gameBoard != null) gameBoard.setVisible(true);
+        // Show score and next panel containers
+        if (scoreLabel != null) {
+            Node parent = scoreLabel.getParent();
+            if (parent != null && parent.getParent() != null) {
+                parent.getParent().setVisible(true);
+            }
+        }
+        if (nextPanel != null) {
+            Node parent = nextPanel.getParent();
+            if (parent != null) {
+                parent.setVisible(true);
+            }
+        }
+        
+        // Show brick panel and shadow panel (they will be positioned by the game)
+        if (brickPanel != null) {
+            brickPanel.setVisible(true);
+        }
+        if (shadowPanel != null) {
+            shadowPanel.setVisible(true);
+        }
+        
+        // Initialize game if not already initialized
+        if (gameController == null) {
+            gameController = new GameController(this);
+        } else {
+            // If game already exists, start a new game
+            newGame(null);
+        }
+        
+        // Request focus for game controls
+        if (gamePanel != null) {
+            gamePanel.requestFocus();
+        }
+    }
+
+    @FXML
+    private void onExit(ActionEvent e) {
         // Clean up video player before exiting
         if (mediaPlayer != null) {
             mediaPlayer.stop();
             mediaPlayer.dispose();
         }
         Platform.exit();
+    }
+
+    @FXML
+    private void onQuit(ActionEvent e) {
+        // Return to main menu instead of exiting
+        // Stop the game timeline
+        if (timeLine != null) {
+            timeLine.stop();
+        }
+        
+        // Hide pause overlay
+        if (pauseOverlay != null) {
+            pauseOverlay.setVisible(false);
+        }
+        
+        // Hide game content
+        if (gameBoard != null) gameBoard.setVisible(false);
+        if (scoreLabel != null) {
+            Node parent = scoreLabel.getParent();
+            if (parent != null && parent.getParent() != null) {
+                parent.getParent().setVisible(false);
+            }
+        }
+        if (nextPanel != null) {
+            Node parent = nextPanel.getParent();
+            if (parent != null) {
+                parent.setVisible(false);
+            }
+        }
+        
+        // Hide brick panel and shadow panel
+        if (brickPanel != null) {
+            brickPanel.setVisible(false);
+        }
+        if (shadowPanel != null) {
+            shadowPanel.setVisible(false);
+        }
+        
+        // Show main menu
+        if (mainMenuOverlay != null) {
+            mainMenuOverlay.setVisible(true);
+        }
+        
+        // Reset game state
+        isPause.setValue(Boolean.FALSE);
+        isGameOver.setValue(Boolean.FALSE);
+        
+        // Reset game controller (will be recreated when Start is clicked)
+        gameController = null;
+        eventListener = null;
+    }
+    
+    public void setGameController(GameController gameController) {
+        this.gameController = gameController;
     }
 }
