@@ -35,6 +35,9 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.effect.Glow;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.scene.media.MediaView;
 
 
 import java.net.URL;
@@ -55,8 +58,11 @@ public class GuiController implements Initializable {
     @FXML private Label linesLabel;
     @FXML private GridPane nextPanel;
     @FXML private StackPane pauseOverlay;
+    @FXML private StackPane rootStackPane; // Root StackPane from FXML
 
     private int totalLinesCleared = 0;
+    private MediaPlayer mediaPlayer;
+    private MediaView mediaView;
 
     private Rectangle[][] displayMatrix;
     private Rectangle[][] nextPreview;
@@ -136,6 +142,49 @@ public class GuiController implements Initializable {
         reflection.setFraction(0.8);
         reflection.setTopOpacity(0.9);
         reflection.setTopOffset(-12);
+
+        // Setup video background
+        setupVideoBackground();
+    }
+
+    private void setupVideoBackground() {
+        try {
+            // Load the video file from resources
+            URL videoUrl = getClass().getClassLoader().getResource("galaxy.mp4");
+            if (videoUrl != null) {
+                Media media = new Media(videoUrl.toExternalForm());
+                mediaPlayer = new MediaPlayer(media);
+                mediaView = new MediaView(mediaPlayer);
+                
+                // Configure video view
+                mediaView.setPreserveRatio(true);
+                mediaView.setSmooth(true);
+                
+                // Configure media player
+                mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE); // Loop forever
+                mediaPlayer.setAutoPlay(true);
+                mediaPlayer.setMute(true); // Mute audio
+                
+                // Add video to root StackPane behind all content
+                Platform.runLater(() -> {
+                    if (rootStackPane != null) {
+                        // Add video at index 0 to be behind everything
+                        rootStackPane.getChildren().add(0, mediaView);
+                        
+                        // Bind video size to fill the window
+                        mediaView.fitWidthProperty().bind(rootStackPane.widthProperty());
+                        mediaView.fitHeightProperty().bind(rootStackPane.heightProperty());
+                        mediaView.setPreserveRatio(false); // Stretch to fill
+                    }
+                });
+            } else {
+                System.err.println("Video file galaxy.mp4 not found in resources");
+            }
+        } catch (Exception e) {
+            // If video fails to load, continue without it
+            System.err.println("Failed to load background video: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     public void initGameView(int[][] boardMatrix, ViewData brick) {
@@ -503,6 +552,11 @@ public class GuiController implements Initializable {
 
     @FXML
     private void onQuit(ActionEvent e) {
+        // Clean up video player before exiting
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer.dispose();
+        }
         Platform.exit();
     }
 }

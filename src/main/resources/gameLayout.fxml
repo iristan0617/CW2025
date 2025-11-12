@@ -3,9 +3,8 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.*?>
 <?import java.net.URL?>
-<StackPane fx:controller="controller.GuiController"
-           xmlns:fx="http://javafx.com/fxml"
-           style="-fx-background-image: url('background_image.png');">
+<StackPane fx:id="rootStackPane" fx:controller="controller.GuiController"
+           xmlns:fx="http://javafx.com/fxml">
 
     <!-- Main game content -->
     <Pane>
