@@ -74,20 +74,39 @@ public class SimpleBoard implements Board {
     public boolean rotateLeftBrick() {
         int[][] currentMatrix = MatrixOperations.copy(currentGameMatrix);
         NextShapeInfo nextShape = brickRotator.getNextShape();
-        boolean conflict = MatrixOperations.intersect(currentMatrix, nextShape.getShape(), (int) currentOffset.getX(), (int) currentOffset.getY());
-        if (conflict) {
-            return false;
-        } else {
+        int[][] rotatedShape = nextShape.getShape();
+        int currentX = (int) currentOffset.getX();
+        int currentY = (int) currentOffset.getY();
+        
+        // Try rotation at current position first
+        if (!MatrixOperations.intersect(currentMatrix, rotatedShape, currentX, currentY)) {
             brickRotator.setCurrentShape(nextShape.getPosition());
             return true;
         }
+        
+        // Wall kick: try shifting left and right to find a valid rotation position
+        // Standard wall kick offsets: try 1 left, 1 right, 2 left, 2 right
+        int[] kickOffsets = {-1, 1, -2, 2};
+        
+        for (int offset : kickOffsets) {
+            int testX = currentX + offset;
+            if (!MatrixOperations.intersect(currentMatrix, rotatedShape, testX, currentY)) {
+                // Found a valid position, update offset and rotate
+                currentOffset = new Point(testX, currentY);
+                brickRotator.setCurrentShape(nextShape.getPosition());
+                return true;
+            }
+        }
+        
+        // All attempts failed
+        return false;
     }
 
     @Override
     public boolean createNewBrick() {
         Brick currentBrick = brickGenerator.getBrick();
         brickRotator.setBrick(currentBrick);
-        currentOffset = new Point(4, 10);
+        currentOffset = new Point(4, 0);
         return MatrixOperations.intersect(currentGameMatrix, brickRotator.getCurrentShape(), (int) currentOffset.getX(), (int) currentOffset.getY());
     }
 

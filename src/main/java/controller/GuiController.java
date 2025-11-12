@@ -24,6 +24,7 @@ import javafx.scene.text.Font;
 import javafx.util.Duration;
 import model.DownData;
 import model.ViewData;
+import model.MatrixOperations;
 import view.GameOverPanel;
 import view.NotificationPanel;
 import javafx.geometry.Point2D;
@@ -61,7 +62,10 @@ public class GuiController implements Initializable {
     private Rectangle[][] nextPreview;
     private InputEventListener eventListener;
     private Rectangle[][] rectangles;
+    private Rectangle[][] shadowRectangles;
+    private GridPane shadowPanel;
     private Timeline timeLine;
+    private int[][] currentBoardMatrix;
 
     private final BooleanProperty isPause = new SimpleBooleanProperty();
     private final BooleanProperty isGameOver = new SimpleBooleanProperty();
@@ -131,6 +135,7 @@ public class GuiController implements Initializable {
     }
 
     public void initGameView(int[][] boardMatrix, ViewData brick) {
+        currentBoardMatrix = boardMatrix;
         displayMatrix = new Rectangle[boardMatrix.length][boardMatrix[0].length];
         for (int i = 2; i < boardMatrix.length; i++) {
             for (int j = 0; j < boardMatrix[i].length; j++) {
@@ -161,11 +166,37 @@ public class GuiController implements Initializable {
             }
         }
 
+        // Create shadow panel for ghost preview
+        shadowPanel = new GridPane();
+        shadowPanel.setHgap(brickPanel.getHgap());
+        shadowPanel.setVgap(brickPanel.getVgap());
+        shadowPanel.setMouseTransparent(true); // Don't block mouse events
+        shadowRectangles = new Rectangle[brick.getBrickData().length][brick.getBrickData()[0].length];
+        for (int i = 0; i < brick.getBrickData().length; i++) {
+            for (int j = 0; j < brick.getBrickData()[i].length; j++) {
+                Rectangle shadowRect = new Rectangle(BRICK_SIZE, BRICK_SIZE);
+                shadowRect.setFill(Color.TRANSPARENT);
+                shadowRect.setStroke(Color.WHITE);
+                shadowRect.setStrokeWidth(1.5);
+                shadowRect.setOpacity(0.3);
+                shadowRectangles[i][j] = shadowRect;
+                shadowPanel.add(shadowRect, j, i);
+            }
+        }
+        // Add shadow panel to the same parent as brickPanel
+        Pane root = (Pane) gameBoard.getParent();
+        root.getChildren().add(shadowPanel);
+
         Point2D origin = gamePanelOriginInRoot();
         brickPanel.setLayoutX(origin.getX() + brick.getxPosition() * brickPanel.getVgap() + brick.getxPosition() * BRICK_SIZE);
-        brickPanel.setLayoutY(origin.getY() - 42 + brick.getyPosition() * brickPanel.getHgap() + brick.getyPosition() * BRICK_SIZE);
+        // Calculate Y position: brick yPosition is in matrix coordinates, display starts from matrix row 2
+        // So we need to subtract 2 from yPosition to get the display row, then calculate pixel position
+        // Negative displayRow means the brick is above the visible area (outside the border)
+        int displayRow = brick.getyPosition() - 2;
+        brickPanel.setLayoutY(origin.getY() + displayRow * (brickPanel.getHgap() + BRICK_SIZE));
 
         renderNextPreview(brick.getNextBrickData());
+        updateShadow(brick);
 
         timeLine = new Timeline(new KeyFrame(Duration.millis(400),
                 ae -> moveDown(new MoveEvent(EventType.DOWN, EventSource.THREAD))));
@@ -191,17 +222,23 @@ public class GuiController implements Initializable {
         if (isPause.getValue() == Boolean.FALSE) {
             Point2D origin = gamePanelOriginInRoot();
             brickPanel.setLayoutX(origin.getX() + brick.getxPosition() * brickPanel.getVgap() + brick.getxPosition() * BRICK_SIZE);
-            brickPanel.setLayoutY(origin.getY() - 42 + brick.getyPosition() * brickPanel.getHgap() + brick.getyPosition() * BRICK_SIZE);
+            // Calculate Y position: brick yPosition is in matrix coordinates, display starts from matrix row 2
+            // So we need to subtract 2 from yPosition to get the display row, then calculate pixel position
+            // Negative displayRow means the brick is above the visible area (outside the border)
+            int displayRow = brick.getyPosition() - 2;
+            brickPanel.setLayoutY(origin.getY() + displayRow * (brickPanel.getHgap() + BRICK_SIZE));
             for (int i = 0; i < brick.getBrickData().length; i++) {
                 for (int j = 0; j < brick.getBrickData()[i].length; j++) {
                     setRectangleData(brick.getBrickData()[i][j], rectangles[i][j]);
                 }
             }
             renderNextPreview(brick.getNextBrickData());
+            updateShadow(brick);
         }
     }
 
     public void refreshGameBackground(int[][] board) {
+        currentBoardMatrix = board;
         for (int i = 2; i < board.length && i < displayMatrix.length; i++) {
             for (int j = 0; j < board[i].length && j < displayMatrix[i].length; j++) {
                 if (displayMatrix[i][j] != null) {
@@ -225,6 +262,90 @@ public class GuiController implements Initializable {
         } else {
             rectangle.setEffect(null); // No glow for transparent bricks
         }
+    }
+
+    private int calculateDropPosition(int[][] brickData, int x, int y) {
+        if (currentBoardMatrix == null) return y;
+        
+        int dropY = y;
+        // Simulate dropping the brick until it hits something
+        while (true) {
+            int testY = dropY + 1;
+            // Check if the brick would collide at testY position
+            if (MatrixOperations.intersect(currentBoardMatrix, brickData, x, testY)) {
+                break; // Found collision, stop here
+            }
+            dropY = testY;
+            // Safety check to prevent infinite loop
+            if (dropY >= currentBoardMatrix.length) {
+                break;
+            }
+        }
+        return dropY;
+    }
+
+    private void updateShadow(ViewData brick) {
+        if (shadowPanel == null || currentBoardMatrix == null) {
+            return;
+        }
+
+        int[][] brickData = brick.getBrickData();
+        int dropY = calculateDropPosition(brickData, brick.getxPosition(), brick.getyPosition());
+        
+        // Only show shadow if it's different from current position and below the current position
+        if (dropY <= brick.getyPosition()) {
+            shadowPanel.setVisible(false);
+            return;
+        }
+
+        shadowPanel.setVisible(true);
+        
+        // Check if shadow rectangles array needs to be resized
+        if (shadowRectangles == null || shadowRectangles.length != brickData.length || 
+            (brickData.length > 0 && shadowRectangles[0].length != brickData[0].length)) {
+            // Recreate shadow rectangles if size changed
+            shadowPanel.getChildren().clear();
+            shadowRectangles = new Rectangle[brickData.length][brickData[0].length];
+            for (int i = 0; i < brickData.length; i++) {
+                for (int j = 0; j < brickData[i].length; j++) {
+                    Rectangle shadowRect = new Rectangle(BRICK_SIZE, BRICK_SIZE);
+                    shadowRect.setFill(Color.GRAY);
+                    shadowRect.setOpacity(0.4);
+                    shadowRect.setStroke(Color.DARKGRAY);
+                    shadowRect.setStrokeWidth(1.0);
+                    shadowRectangles[i][j] = shadowRect;
+                    shadowPanel.add(shadowRect, j, i);
+                }
+            }
+        }
+        
+        // Update shadow rectangles to match brick shape - all grey color
+        Color shadowGrey = Color.GRAY;
+        Color shadowStroke = Color.DARKGRAY;
+        for (int i = 0; i < brickData.length; i++) {
+            for (int j = 0; j < brickData[i].length; j++) {
+                Rectangle shadowRect = shadowRectangles[i][j];
+                if (shadowRect != null) {
+                    if (brickData[i][j] != 0) {
+                        // Show shadow for non-empty cells - use grey for all blocks
+                        shadowRect.setVisible(true);
+                        shadowRect.setFill(shadowGrey);
+                        shadowRect.setStroke(shadowStroke);
+                    } else {
+                        shadowRect.setVisible(false);
+                    }
+                }
+            }
+        }
+
+        // Position shadow panel at drop location
+        Point2D origin = gamePanelOriginInRoot();
+        shadowPanel.setLayoutX(origin.getX() + brick.getxPosition() * shadowPanel.getVgap() + brick.getxPosition() * BRICK_SIZE);
+        int displayRow = dropY - 2;
+        shadowPanel.setLayoutY(origin.getY() + displayRow * (shadowPanel.getHgap() + BRICK_SIZE));
+        
+        // Ensure shadow is behind the brick but visible
+        shadowPanel.toBack();
     }
 
     private void moveDown(MoveEvent event) {
