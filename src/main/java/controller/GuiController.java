@@ -101,6 +101,10 @@ public class GuiController implements Initializable {
                         moveDown(new MoveEvent(EventType.DOWN, EventSource.USER));
                         keyEvent.consume();
                     }
+                    if (keyEvent.getCode() == KeyCode.SPACE) {
+                        hardDrop(new MoveEvent(EventType.HARD_DROP, EventSource.USER));
+                        keyEvent.consume();
+                    }
                 }
                 if (keyEvent.getCode() == KeyCode.N) {
                     newGame(null);
@@ -171,21 +175,26 @@ public class GuiController implements Initializable {
         shadowPanel.setHgap(brickPanel.getHgap());
         shadowPanel.setVgap(brickPanel.getVgap());
         shadowPanel.setMouseTransparent(true); // Don't block mouse events
-        shadowRectangles = new Rectangle[brick.getBrickData().length][brick.getBrickData()[0].length];
-        for (int i = 0; i < brick.getBrickData().length; i++) {
-            for (int j = 0; j < brick.getBrickData()[i].length; j++) {
-                Rectangle shadowRect = new Rectangle(BRICK_SIZE, BRICK_SIZE);
-                shadowRect.setFill(Color.TRANSPARENT);
-                shadowRect.setStroke(Color.WHITE);
-                shadowRect.setStrokeWidth(1.5);
-                shadowRect.setOpacity(0.3);
-                shadowRectangles[i][j] = shadowRect;
-                shadowPanel.add(shadowRect, j, i);
+        int[][] brickData = brick.getBrickData();
+        if (brickData != null && brickData.length > 0 && brickData[0].length > 0) {
+            shadowRectangles = new Rectangle[brickData.length][brickData[0].length];
+            for (int i = 0; i < brickData.length; i++) {
+                for (int j = 0; j < brickData[i].length; j++) {
+                    Rectangle shadowRect = new Rectangle(BRICK_SIZE, BRICK_SIZE);
+                    shadowRect.setFill(Color.GRAY);
+                    shadowRect.setOpacity(0.4);
+                    shadowRect.setStroke(Color.DARKGRAY);
+                    shadowRect.setStrokeWidth(1.0);
+                    shadowRectangles[i][j] = shadowRect;
+                    shadowPanel.add(shadowRect, j, i);
+                }
             }
         }
         // Add shadow panel to the same parent as brickPanel
         Pane root = (Pane) gameBoard.getParent();
-        root.getChildren().add(shadowPanel);
+        if (root != null && !root.getChildren().contains(shadowPanel)) {
+            root.getChildren().add(shadowPanel);
+        }
 
         Point2D origin = gamePanelOriginInRoot();
         brickPanel.setLayoutX(origin.getX() + brick.getxPosition() * brickPanel.getVgap() + brick.getxPosition() * BRICK_SIZE);
@@ -301,8 +310,12 @@ public class GuiController implements Initializable {
         shadowPanel.setVisible(true);
         
         // Check if shadow rectangles array needs to be resized
+        if (brickData == null || brickData.length == 0 || brickData[0].length == 0) {
+            shadowPanel.setVisible(false);
+            return;
+        }
         if (shadowRectangles == null || shadowRectangles.length != brickData.length || 
-            (brickData.length > 0 && shadowRectangles[0].length != brickData[0].length)) {
+            (brickData.length > 0 && (shadowRectangles[0] == null || shadowRectangles[0].length != brickData[0].length))) {
             // Recreate shadow rectangles if size changed
             shadowPanel.getChildren().clear();
             shadowRectangles = new Rectangle[brickData.length][brickData[0].length];
@@ -357,6 +370,22 @@ public class GuiController implements Initializable {
                 groupNotification.getChildren().add(notificationPanel);
                 notificationPanel.showScore(groupNotification.getChildren());
             }
+            refreshBrick(downData.getViewData());
+        }
+        gamePanel.requestFocus();
+    }
+
+    private void hardDrop(MoveEvent event) {
+        if (isPause.getValue() == Boolean.FALSE) {
+            DownData downData = eventListener.onHardDropEvent(event);
+            if (downData.getClearRow() != null && downData.getClearRow().getLinesRemoved() > 0) {
+                updateLinesCleared(downData.getClearRow().getLinesRemoved());
+                NotificationPanel notificationPanel = new NotificationPanel("+" + downData.getClearRow().getScoreBonus());
+                groupNotification.getChildren().add(notificationPanel);
+                notificationPanel.showScore(groupNotification.getChildren());
+            }
+            // Hard drop already merged the brick, so we just refresh the background
+            // The view data will be for the next brick
             refreshBrick(downData.getViewData());
         }
         gamePanel.requestFocus();

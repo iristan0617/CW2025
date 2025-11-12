@@ -62,6 +62,30 @@ public class GameController implements InputEventListener {
         return board.getViewData();
     }
 
+    @Override
+    public DownData onHardDropEvent(MoveEvent event) {
+        // Hard drop: instantly drop the brick to the bottom
+        // Calculate drop distance before dropping for scoring
+        int dropDistance = ((SimpleBoard) board).getHardDropDistance();
+        boolean dropped = board.hardDropBrick();
+        if (dropped) {
+            // Give score bonus based on drop distance (2 points per row dropped)
+            board.getScore().add(dropDistance * 2);
+        }
+        
+        // Now merge the brick and process
+        board.mergeBrickToBackground();
+        ClearRow clearRow = board.clearRows();
+        if (clearRow.getLinesRemoved() > 0) {
+            board.getScore().add(clearRow.getScoreBonus());
+        }
+        if (board.createNewBrick()) {
+            viewGuiController.gameOver();
+        }
+        
+        viewGuiController.refreshGameBackground(board.getBoardMatrix());
+        return new DownData(clearRow, board.getViewData());
+    }
 
     @Override
     public void createNewGame() {

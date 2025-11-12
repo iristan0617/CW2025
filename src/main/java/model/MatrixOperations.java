@@ -54,7 +54,10 @@ public class MatrixOperations {
             for (int j = 0; j < brick[i].length; j++) {
                 int targetX = x + i;
                 int targetY = y + j;
-                if (brick[j][i] != 0) {
+                // Check bounds before accessing array
+                if (targetY >= 0 && targetY < copy.length && 
+                    targetX >= 0 && targetX < copy[targetY].length &&
+                    brick[j][i] != 0) {
                     copy[targetY][targetX] = brick[j][i];
                 }
             }

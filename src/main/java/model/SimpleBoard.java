@@ -103,6 +103,54 @@ public class SimpleBoard implements Board {
     }
 
     @Override
+    public boolean hardDropBrick() {
+        int[][] currentMatrix = MatrixOperations.copy(currentGameMatrix);
+        int[][] brickShape = brickRotator.getCurrentShape();
+        int currentX = (int) currentOffset.getX();
+        int currentY = (int) currentOffset.getY();
+        
+        // Calculate drop position by simulating drop
+        int dropY = currentY;
+        while (true) {
+            int testY = dropY + 1;
+            if (MatrixOperations.intersect(currentMatrix, brickShape, currentX, testY)) {
+                break; // Found collision, stop here
+            }
+            dropY = testY;
+            // Safety check to prevent infinite loop
+            if (dropY >= currentGameMatrix.length) {
+                break;
+            }
+        }
+        
+        // Move brick to drop position
+        currentOffset = new Point(currentX, dropY);
+        return true;
+    }
+
+    public int getHardDropDistance() {
+        // Calculate how many rows the brick will drop
+        int[][] currentMatrix = MatrixOperations.copy(currentGameMatrix);
+        int[][] brickShape = brickRotator.getCurrentShape();
+        int currentX = (int) currentOffset.getX();
+        int currentY = (int) currentOffset.getY();
+        
+        int dropY = currentY;
+        while (true) {
+            int testY = dropY + 1;
+            if (MatrixOperations.intersect(currentMatrix, brickShape, currentX, testY)) {
+                break;
+            }
+            dropY = testY;
+            if (dropY >= currentGameMatrix.length) {
+                break;
+            }
+        }
+        
+        return Math.max(0, dropY - currentY);
+    }
+
+    @Override
     public boolean createNewBrick() {
         Brick currentBrick = brickGenerator.getBrick();
         brickRotator.setBrick(currentBrick);
