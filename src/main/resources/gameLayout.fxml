@@ -44,23 +44,22 @@
 
     <!-- MAIN MENU OVERLAY -->
     <StackPane fx:id="mainMenuOverlay"
-               style="-fx-background-color: rgba(0,0,0,0.7);"
+               style="-fx-background-image: url('pastel.jpg'); -fx-background-size: cover; -fx-background-position: center center;"
                alignment="CENTER">
         <VBox alignment="CENTER" spacing="40">
             <!-- Title -->
-            <Label text="TETRIS" 
-                   style="-fx-font-family: 'Let''s go Digital'; -fx-font-size: 96px; -fx-font-weight: bold; -fx-text-fill: yellow; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.8), 10, 0.5, 0, 2);" />
+            <Label text="TETRIS" styleClass="main-menu-title" />
             
             <!-- Buttons -->
             <VBox alignment="CENTER" spacing="20">
                 <Button text="START"
                         onAction="#onStartGame"
-                        styleClass="control-button mainMenuButton"
+                        styleClass="mainMenuButton"
                         style="-fx-pref-height: 70px; -fx-min-width: 250px; -fx-pref-width: 300px; -fx-font-size: 32px; -fx-font-weight: bold;" />
                 
                 <Button text="EXIT"
                         onAction="#onExit"
-                        styleClass="control-button mainMenuButton"
+                        styleClass="mainMenuButton"
                         style="-fx-pref-height: 70px; -fx-min-width: 250px; -fx-pref-width: 300px; -fx-font-size: 32px; -fx-font-weight: bold;" />
             </VBox>
         </VBox>
