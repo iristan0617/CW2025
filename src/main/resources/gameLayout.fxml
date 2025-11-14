@@ -26,6 +26,12 @@
             <GridPane fx:id="nextPanel" hgap="1" vgap="1" styleClass="nextBrick"/>
         </VBox>
 
+        <!-- Hold Piece Preview -->
+        <VBox alignment="CENTER" spacing="5" layoutX="1000" layoutY="320">
+            <Label text="HOLD:" styleClass="hud-title"/>
+            <GridPane fx:id="holdPanel" hgap="1" vgap="1" styleClass="nextBrick"/>
+        </VBox>
+
         <GridPane fx:id="brickPanel" vgap="1" hgap="1"/>
 
         <BorderPane styleClass="gameBoard" fx:id="gameBoard">

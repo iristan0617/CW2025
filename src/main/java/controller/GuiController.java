@@ -57,6 +57,7 @@ public class GuiController implements Initializable {
     @FXML private Label scoreLabel;
     @FXML private Label linesLabel;
     @FXML private GridPane nextPanel;
+    @FXML private GridPane holdPanel;
     @FXML private StackPane pauseOverlay;
     @FXML private StackPane mainMenuOverlay;
     @FXML private StackPane rootStackPane; // Root StackPane from FXML
@@ -68,6 +69,7 @@ public class GuiController implements Initializable {
 
     private Rectangle[][] displayMatrix;
     private Rectangle[][] nextPreview;
+    private Rectangle[][] holdPreview;
     private InputEventListener eventListener;
     private Rectangle[][] rectangles;
     private Rectangle[][] shadowRectangles;
@@ -113,6 +115,10 @@ public class GuiController implements Initializable {
                         hardDrop(new MoveEvent(EventType.HARD_DROP, EventSource.USER));
                         keyEvent.consume();
                     }
+                    if (keyEvent.getCode() == KeyCode.C) {
+                        refreshBrick(eventListener.onHoldEvent(new MoveEvent(EventType.HOLD, EventSource.USER)));
+                        keyEvent.consume();
+                    }
                 }
                 if (keyEvent.getCode() == KeyCode.N) {
                     newGame(null);
@@ -145,6 +151,12 @@ public class GuiController implements Initializable {
             }
             if (nextPanel != null) {
                 Node parent = nextPanel.getParent();
+                if (parent != null) {
+                    parent.setVisible(false);
+                }
+            }
+            if (holdPanel != null) {
+                Node parent = holdPanel.getParent();
                 if (parent != null) {
                     parent.setVisible(false);
                 }
@@ -277,6 +289,7 @@ public class GuiController implements Initializable {
         brickPanel.setLayoutY(origin.getY() + displayRow * (brickPanel.getHgap() + BRICK_SIZE));
 
         renderNextPreview(brick.getNextBrickData());
+        renderHoldPreview(brick.getHeldBrickData());
         updateShadow(brick);
 
         timeLine = new Timeline(new KeyFrame(Duration.millis(400),
@@ -314,6 +327,7 @@ public class GuiController implements Initializable {
                 }
             }
             renderNextPreview(brick.getNextBrickData());
+            renderHoldPreview(brick.getHeldBrickData());
             updateShadow(brick);
         }
     }
@@ -546,6 +560,35 @@ public class GuiController implements Initializable {
         }
     }
 
+    private void renderHoldPreview(int[][] hold) {
+        if (holdPanel == null) return;
+        holdPanel.getChildren().clear();
+        if (hold == null || hold.length == 0) {
+            // No held piece, show empty placeholder (4x4 grid of transparent/empty cells)
+            holdPreview = new Rectangle[4][4];
+            for (int i = 0; i < 4; i++) {
+                for (int j = 0; j < 4; j++) {
+                    Rectangle r = new Rectangle(BRICK_SIZE, BRICK_SIZE);
+                    r.setFill(Color.TRANSPARENT);
+                    r.setStroke(Color.rgb(255, 255, 255, 0.1));
+                    r.setStrokeWidth(0.5);
+                    holdPreview[i][j] = r;
+                    holdPanel.add(r, j, i);
+                }
+            }
+            return;
+        }
+        holdPreview = new Rectangle[hold.length][hold[0].length];
+        for (int i = 0; i < hold.length; i++) {
+            for (int j = 0; j < hold[i].length; j++) {
+                Rectangle r = new Rectangle(BRICK_SIZE, BRICK_SIZE);
+                r.setFill(getFillColor(hold[i][j]));
+                holdPreview[i][j] = r;
+                holdPanel.add(r, j, i);
+            }
+        }
+    }
+
     private void setPaused(boolean paused) {
         isPause.setValue(paused);
         if (timeLine != null) {
@@ -595,6 +638,12 @@ public class GuiController implements Initializable {
                 parent.setVisible(true);
             }
         }
+        if (holdPanel != null) {
+            Node parent = holdPanel.getParent();
+            if (parent != null) {
+                parent.setVisible(true);
+            }
+        }
         
         // Show brick panel and shadow panel (they will be positioned by the game)
         if (brickPanel != null) {
@@ -604,13 +653,36 @@ public class GuiController implements Initializable {
             shadowPanel.setVisible(true);
         }
         
-        // Initialize game if not already initialized
-        if (gameController == null) {
-            gameController = new GameController(this);
-        } else {
-            // If game already exists, start a new game
-            newGame(null);
+        // Always create a fresh game when starting
+        // Stop any existing timeline first
+        if (timeLine != null) {
+            timeLine.stop();
         }
+        
+        // Clear the game board display
+        if (gamePanel != null) {
+            gamePanel.getChildren().clear();
+        }
+        if (brickPanel != null) {
+            brickPanel.getChildren().clear();
+        }
+        if (shadowPanel != null) {
+            shadowPanel.getChildren().clear();
+        }
+        displayMatrix = null;
+        rectangles = null;
+        shadowRectangles = null;
+        currentBoardMatrix = null;
+        
+        // Reset game state
+        isPause.setValue(Boolean.FALSE);
+        isGameOver.setValue(Boolean.FALSE);
+        gameOverPanel.setVisible(false);
+        resetLinesCleared();
+        
+        // Create a new game controller (this will reset the board and start fresh)
+        // The constructor will call initGameView which properly initializes the display
+        gameController = new GameController(this);
         
         // Request focus for game controls
         if (gamePanel != null) {
@@ -655,6 +727,12 @@ public class GuiController implements Initializable {
                 parent.setVisible(false);
             }
         }
+        if (holdPanel != null) {
+            Node parent = holdPanel.getParent();
+            if (parent != null) {
+                parent.setVisible(false);
+            }
+        }
         
         // Hide brick panel and shadow panel
         if (brickPanel != null) {
@@ -672,6 +750,12 @@ public class GuiController implements Initializable {
         // Reset game state
         isPause.setValue(Boolean.FALSE);
         isGameOver.setValue(Boolean.FALSE);
+        resetLinesCleared();
+        
+        // Reset score display
+        if (scoreLabel != null) {
+            scoreLabel.setText("0");
+        }
         
         // Reset game controller (will be recreated when Start is clicked)
         gameController = null;

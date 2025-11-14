@@ -17,6 +17,8 @@ public class SimpleBoard implements Board {
     private int[][] currentGameMatrix;
     private Point currentOffset;
     private final Score score;
+    private Brick heldBrick;
+    private boolean canHold = true; // Can only hold once per piece placement
 
     public SimpleBoard(int width, int height) {
         this.width = width;
@@ -151,10 +153,40 @@ public class SimpleBoard implements Board {
     }
 
     @Override
+    public boolean holdBrick() {
+        // Can only hold once per piece placement
+        if (!canHold) {
+            return false;
+        }
+        
+        // Get the current brick from the rotator
+        Brick currentBrick = brickRotator.getBrick();
+        
+        if (heldBrick == null) {
+            // No held brick, so hold the current one and get a new brick
+            heldBrick = currentBrick;
+            Brick newBrick = brickGenerator.getBrick();
+            brickRotator.setBrick(newBrick);
+            currentOffset = new Point(4, 0);
+            canHold = false; // Can't hold again until this piece is placed
+            return true;
+        } else {
+            // Swap current brick with held brick
+            Brick temp = heldBrick;
+            heldBrick = currentBrick;
+            brickRotator.setBrick(temp);
+            currentOffset = new Point(4, 0);
+            canHold = false; // Can't hold again until this piece is placed
+            return true;
+        }
+    }
+
+    @Override
     public boolean createNewBrick() {
         Brick currentBrick = brickGenerator.getBrick();
         brickRotator.setBrick(currentBrick);
         currentOffset = new Point(4, 0);
+        canHold = true; // Reset hold ability when new piece is created
         return MatrixOperations.intersect(currentGameMatrix, brickRotator.getCurrentShape(), (int) currentOffset.getX(), (int) currentOffset.getY());
     }
 
@@ -165,7 +197,11 @@ public class SimpleBoard implements Board {
 
     @Override
     public ViewData getViewData() {
-        return new ViewData(brickRotator.getCurrentShape(), (int) currentOffset.getX(), (int) currentOffset.getY(), brickGenerator.getNextBrick().getShapeMatrix().get(0));
+        int[][] heldBrickData = null;
+        if (heldBrick != null) {
+            heldBrickData = heldBrick.getShapeMatrix().get(0);
+        }
+        return new ViewData(brickRotator.getCurrentShape(), (int) currentOffset.getX(), (int) currentOffset.getY(), brickGenerator.getNextBrick().getShapeMatrix().get(0), heldBrickData);
     }
 
     @Override
@@ -191,6 +227,8 @@ public class SimpleBoard implements Board {
     public void newGame() {
         currentGameMatrix = new int[width][height];
         score.reset();
+        heldBrick = null;
+        canHold = true;
         createNewBrick();
     }
 }
