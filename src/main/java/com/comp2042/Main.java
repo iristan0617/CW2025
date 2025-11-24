@@ -24,7 +24,6 @@ public class Main extends Application {
         Scene scene = new Scene(root, 300, 510);
         primaryStage.setScene(scene);
         primaryStage.show();
-        // Don't start game immediately - wait for Start button
         // Game will be initialized when user clicks Start
     }
 

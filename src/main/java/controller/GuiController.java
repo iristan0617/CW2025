@@ -17,6 +17,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Region;
 import javafx.scene.control.Label;
+import javafx.scene.control.Button;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
@@ -34,10 +35,15 @@ import javafx.geometry.Bounds;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.HBox;
 import javafx.scene.effect.Glow;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
+import javafx.animation.ScaleTransition;
+import javafx.animation.FadeTransition;
+import javafx.animation.ParallelTransition;
+import model.PowerUp;
 
 
 import java.net.URL;
@@ -56,8 +62,10 @@ public class GuiController implements Initializable {
     @FXML private StackPane boardStack;
     @FXML private Label scoreLabel;
     @FXML private Label linesLabel;
+    @FXML private Label skillPointsLabel;
     @FXML private GridPane nextPanel;
     @FXML private GridPane holdPanel;
+    @FXML private VBox powerUpsContainer;
     @FXML private StackPane pauseOverlay;
     @FXML private StackPane mainMenuOverlay;
     @FXML private StackPane rootStackPane; // Root StackPane from FXML
@@ -76,6 +84,14 @@ public class GuiController implements Initializable {
     private GridPane shadowPanel;
     private Timeline timeLine;
     private int[][] currentBoardMatrix;
+    
+    // Slow motion power-up
+    private static final long SLOW_MOTION_SPEED_MS = 800; // 2x slower than normal (400ms)
+    private static final long NORMAL_SPEED_MS = 400;
+    private Timeline slowMotionRestoreTimer;
+    private Timeline slowMotionCountdownTimer;
+    private int slowMotionRemainingSeconds = 0;
+    private Label slowMotionCountdownLabel;
 
     private final BooleanProperty isPause = new SimpleBooleanProperty();
     private final BooleanProperty isGameOver = new SimpleBooleanProperty();
@@ -119,7 +135,77 @@ public class GuiController implements Initializable {
                         refreshBrick(eventListener.onHoldEvent(new MoveEvent(EventType.HOLD, EventSource.USER)));
                         keyEvent.consume();
                     }
+                    
+                    // Power-up shortcuts: 1, 2, 3 to use power-ups
+                    if (keyEvent.getCode() == KeyCode.DIGIT1 || keyEvent.getCode() == KeyCode.NUMPAD1) {
+                        if (gameController != null) {
+                            PowerUp[] powerUps = PowerUp.values();
+                            if (powerUps.length > 0) {
+                                gameController.activatePowerUp(powerUps[0]); // Row Clearer
+                                updatePowerUpUI();
+                                if (powerUps[0] == PowerUp.ROW_CLEARER) {
+                                    refreshGameBackground(gameController.getBoard().getBoardMatrix());
+                                }
+                            }
+                        }
+                        keyEvent.consume();
+                    }
+                    if (keyEvent.getCode() == KeyCode.DIGIT2 || keyEvent.getCode() == KeyCode.NUMPAD2) {
+                        if (gameController != null) {
+                            PowerUp[] powerUps = PowerUp.values();
+                            if (powerUps.length > 1) {
+                                gameController.activatePowerUp(powerUps[1]); // Slow Motion
+                                updatePowerUpUI();
+                            }
+                        }
+                        keyEvent.consume();
+                    }
+                    if (keyEvent.getCode() == KeyCode.DIGIT3 || keyEvent.getCode() == KeyCode.NUMPAD3) {
+                        if (gameController != null) {
+                            PowerUp[] powerUps = PowerUp.values();
+                            if (powerUps.length > 2) {
+                                gameController.activatePowerUp(powerUps[2]); // Bomb Piece
+                                updatePowerUpUI();
+                            }
+                        }
+                        keyEvent.consume();
+                    }
                 }
+                
+                // Power-up purchase shortcuts: Shift+1, Shift+2, Shift+3 to buy
+                if (keyEvent.isShiftDown()) {
+                    if (keyEvent.getCode() == KeyCode.DIGIT1 || keyEvent.getCode() == KeyCode.NUMPAD1) {
+                        if (gameController != null) {
+                            PowerUp[] powerUps = PowerUp.values();
+                            if (powerUps.length > 0) {
+                                gameController.purchasePowerUp(powerUps[0]);
+                                updatePowerUpUI();
+                            }
+                        }
+                        keyEvent.consume();
+                    }
+                    if (keyEvent.getCode() == KeyCode.DIGIT2 || keyEvent.getCode() == KeyCode.NUMPAD2) {
+                        if (gameController != null) {
+                            PowerUp[] powerUps = PowerUp.values();
+                            if (powerUps.length > 1) {
+                                gameController.purchasePowerUp(powerUps[1]);
+                                updatePowerUpUI();
+                            }
+                        }
+                        keyEvent.consume();
+                    }
+                    if (keyEvent.getCode() == KeyCode.DIGIT3 || keyEvent.getCode() == KeyCode.NUMPAD3) {
+                        if (gameController != null) {
+                            PowerUp[] powerUps = PowerUp.values();
+                            if (powerUps.length > 2) {
+                                gameController.purchasePowerUp(powerUps[2]);
+                                updatePowerUpUI();
+                            }
+                        }
+                        keyEvent.consume();
+                    }
+                }
+                
                 if (keyEvent.getCode() == KeyCode.N) {
                     newGame(null);
                 }
@@ -135,8 +221,21 @@ public class GuiController implements Initializable {
         // Main menu is visible by default
         if (mainMenuOverlay != null) mainMenuOverlay.setVisible(true);
 
-        if (scoreLabel != null) scoreLabel.setText("0");
-        if (linesLabel != null) linesLabel.setText("0");
+        if (scoreLabel != null) {
+            if (scoreLabel.textProperty().isBound()) {
+                scoreLabel.textProperty().unbind();
+            }
+            scoreLabel.setText("0");
+        }
+        if (linesLabel != null) {
+            linesLabel.setText("0");
+        }
+        if (skillPointsLabel != null) {
+            if (skillPointsLabel.textProperty().isBound()) {
+                skillPointsLabel.textProperty().unbind();
+            }
+            skillPointsLabel.setText("0");
+        }
         
         // Hide game content initially (will be shown when Start is clicked)
         // Game content will be shown when Start button is clicked
@@ -266,7 +365,7 @@ public class GuiController implements Initializable {
                 for (int j = 0; j < brickData[i].length; j++) {
                     Rectangle shadowRect = new Rectangle(BRICK_SIZE, BRICK_SIZE);
                     shadowRect.setFill(Color.GRAY);
-                    shadowRect.setOpacity(0.4);
+                    shadowRect.setOpacity(0.55);
                     shadowRect.setStroke(Color.DARKGRAY);
                     shadowRect.setStrokeWidth(1.0);
                     shadowRectangles[i][j] = shadowRect;
@@ -312,7 +411,7 @@ public class GuiController implements Initializable {
         }
     }
 
-    private void refreshBrick(ViewData brick) {
+    public void refreshBrick(ViewData brick) {
         if (isPause.getValue() == Boolean.FALSE) {
             Point2D origin = gamePanelOriginInRoot();
             brickPanel.setLayoutX(origin.getX() + brick.getxPosition() * brickPanel.getVgap() + brick.getxPosition() * BRICK_SIZE);
@@ -409,18 +508,18 @@ public class GuiController implements Initializable {
                 for (int j = 0; j < brickData[i].length; j++) {
                     Rectangle shadowRect = new Rectangle(BRICK_SIZE, BRICK_SIZE);
                     shadowRect.setFill(Color.GRAY);
-                    shadowRect.setOpacity(0.4);
+                    shadowRect.setOpacity(0.7);
                     shadowRect.setStroke(Color.DARKGRAY);
-                    shadowRect.setStrokeWidth(1.0);
+                    shadowRect.setStrokeWidth(1.5);
                     shadowRectangles[i][j] = shadowRect;
                     shadowPanel.add(shadowRect, j, i);
                 }
             }
         }
         
-        // Update shadow rectangles to match brick shape - all grey color
-        Color shadowGrey = Color.GRAY;
-        Color shadowStroke = Color.DARKGRAY;
+        // Update shadow rectangles to match brick shape - all grey color (darker)
+        Color shadowGrey = Color.DARKGRAY;
+        Color shadowStroke = Color.BLACK;
         for (int i = 0; i < brickData.length; i++) {
             for (int j = 0; j < brickData[i].length; j++) {
                 Rectangle shadowRect = shadowRectangles[i][j];
@@ -486,6 +585,16 @@ public class GuiController implements Initializable {
             Platform.runLater(() -> {
                 if (scoreLabel != null) {
                     scoreLabel.textProperty().bind(integerProperty.asString());
+                }
+            });
+        }
+    }
+
+    public void bindSkillPoints(IntegerProperty integerProperty) {
+        if (integerProperty != null) {
+            Platform.runLater(() -> {
+                if (skillPointsLabel != null) {
+                    skillPointsLabel.textProperty().bind(integerProperty.asString());
                 }
             });
         }
@@ -684,6 +793,9 @@ public class GuiController implements Initializable {
         // The constructor will call initGameView which properly initializes the display
         gameController = new GameController(this);
         
+        // Initialize power-up UI
+        initializePowerUpUI();
+        
         // Request focus for game controls
         if (gamePanel != null) {
             gamePanel.requestFocus();
@@ -752,9 +864,18 @@ public class GuiController implements Initializable {
         isGameOver.setValue(Boolean.FALSE);
         resetLinesCleared();
         
-        // Reset score display
+        // Reset score display (unbind first if bound)
         if (scoreLabel != null) {
+            if (scoreLabel.textProperty().isBound()) {
+                scoreLabel.textProperty().unbind();
+            }
             scoreLabel.setText("0");
+        }
+        if (skillPointsLabel != null) {
+            if (skillPointsLabel.textProperty().isBound()) {
+                skillPointsLabel.textProperty().unbind();
+            }
+            skillPointsLabel.setText("0");
         }
         
         // Reset game controller (will be recreated when Start is clicked)
@@ -764,5 +885,206 @@ public class GuiController implements Initializable {
     
     public void setGameController(GameController gameController) {
         this.gameController = gameController;
+    }
+
+    /**
+     * Apply slow motion effect (slows falling speed for 10 seconds)
+     */
+    public void applySlowMotion() {
+        if (timeLine == null || isPause.getValue() || isGameOver.getValue()) {
+            return;
+        }
+
+        // Stop any existing timers
+        if (slowMotionRestoreTimer != null) {
+            slowMotionRestoreTimer.stop();
+        }
+        if (slowMotionCountdownTimer != null) {
+            slowMotionCountdownTimer.stop();
+        }
+
+        // Reset countdown
+        slowMotionRemainingSeconds = 10;
+
+        // Show countdown timer (if label exists)
+        if (slowMotionCountdownLabel != null) {
+            slowMotionCountdownLabel.setVisible(true);
+        }
+        updateSlowMotionCountdown();
+
+        // Stop current timeline
+        timeLine.stop();
+
+        // Create new timeline with slow speed
+        timeLine = new Timeline(new KeyFrame(Duration.millis(SLOW_MOTION_SPEED_MS),
+                ae -> moveDown(new MoveEvent(EventType.DOWN, EventSource.THREAD))));
+        timeLine.setCycleCount(Timeline.INDEFINITE);
+        timeLine.play();
+
+        // Create countdown timer that updates every second
+        slowMotionCountdownTimer = new Timeline(new KeyFrame(Duration.seconds(1), ae -> {
+            slowMotionRemainingSeconds--;
+            updateSlowMotionCountdown();
+            if (slowMotionRemainingSeconds <= 0) {
+                slowMotionCountdownTimer.stop();
+            }
+        }));
+        slowMotionCountdownTimer.setCycleCount(10); // 10 seconds
+        slowMotionCountdownTimer.play();
+
+        // Create timer to restore normal speed after 10 seconds
+        slowMotionRestoreTimer = new Timeline(new KeyFrame(Duration.seconds(10), ae -> restoreNormalSpeed()));
+        slowMotionRestoreTimer.setCycleCount(1);
+        slowMotionRestoreTimer.play();
+    }
+
+    /**
+     * Restore normal falling speed
+     */
+    private void restoreNormalSpeed() {
+        if (timeLine == null || isPause.getValue() || isGameOver.getValue()) {
+            return;
+        }
+
+        timeLine.stop();
+        timeLine = new Timeline(new KeyFrame(Duration.millis(NORMAL_SPEED_MS),
+                ae -> moveDown(new MoveEvent(EventType.DOWN, EventSource.THREAD))));
+        timeLine.setCycleCount(Timeline.INDEFINITE);
+        timeLine.play();
+
+        if (slowMotionCountdownLabel != null) {
+            slowMotionCountdownLabel.setVisible(false);
+        }
+    }
+
+    /**
+     * Update slow motion countdown display
+     */
+    private void updateSlowMotionCountdown() {
+        if (slowMotionCountdownLabel != null) {
+            slowMotionCountdownLabel.setText(String.valueOf(slowMotionRemainingSeconds));
+        }
+    }
+
+    /**
+     * Show bomb explosion effect at the specified grid position
+     */
+    public void showBoomEffect(int gridX, int gridY) {
+        if (gameBoard == null || boardStack == null) return;
+
+        // Convert grid coordinates to screen coordinates
+        // gridX is column (0-9), gridY is row (0-24, visible rows start at 2)
+        double cellW = BRICK_SIZE + gamePanel.getHgap();
+        double cellH = BRICK_SIZE + gamePanel.getVgap();
+
+        // Calculate position relative to boardStack
+        // gridY needs to account for the 2 hidden rows at top
+        double x = gridX * cellW + cellW / 2; // Center of the cell
+        double y = (gridY - 2) * cellH + cellH / 2; // Center of the cell (accounting for 2 hidden rows)
+
+        // Create BOOM! label
+        javafx.scene.control.Label boomLabel = new javafx.scene.control.Label("BOOM!");
+        boomLabel.setStyle(
+            "-fx-font-size: 48px; " +
+            "-fx-font-weight: bold; " +
+            "-fx-text-fill: #FF4500; " + // Orange-red color
+            "-fx-effect: dropshadow(gaussian, rgba(255,69,0,0.9), 15, 0.8, 0, 4);"
+        );
+
+        // Position it at the explosion location (relative to boardStack)
+        boomLabel.setLayoutX(x - 60); // Center the text (approx half width)
+        boomLabel.setLayoutY(y - 24); // Center the text (approx half height)
+
+        // Add to boardStack so it appears on top of everything
+        boardStack.getChildren().add(boomLabel);
+        boomLabel.toFront();
+
+        // Animate: scale up, then fade out
+        ScaleTransition scaleTransition = new ScaleTransition(Duration.millis(300), boomLabel);
+        scaleTransition.setFromX(0.5);
+        scaleTransition.setFromY(0.5);
+        scaleTransition.setToX(1.5);
+        scaleTransition.setToY(1.5);
+
+        FadeTransition fadeTransition = new FadeTransition(Duration.millis(800), boomLabel);
+        fadeTransition.setFromValue(1.0);
+        fadeTransition.setToValue(0.0);
+
+        ParallelTransition parallelTransition = new ParallelTransition(scaleTransition, fadeTransition);
+        parallelTransition.setOnFinished(e -> {
+            boardStack.getChildren().remove(boomLabel);
+        });
+        parallelTransition.play();
+    }
+
+    /**
+     * Initialize the power-up UI panel with buttons for each power-up
+     */
+    private void initializePowerUpUI() {
+        if (powerUpsContainer == null || gameController == null) {
+            return;
+        }
+        
+        powerUpsContainer.getChildren().clear();
+        
+        PowerUp[] powerUps = PowerUp.values();
+        for (int i = 0; i < powerUps.length; i++) {
+            PowerUp powerUp = powerUps[i];
+            int keyNumber = i + 1; // 1, 2, 3 for the three power-ups
+            
+            HBox powerUpRow = new HBox(10);
+            powerUpRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            
+            // Power-up name and description with key binding
+            VBox powerUpInfo = new VBox(2);
+            Label powerUpName = new Label("[" + keyNumber + "] " + powerUp.getName() + " (" + powerUp.getCost() + "pts)");
+            powerUpName.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #ffff00;");
+            Label powerUpDesc = new Label(powerUp.getDescription() + " (Press " + keyNumber + " to use, Shift+" + keyNumber + " to buy)");
+            powerUpDesc.setStyle("-fx-font-size: 9px; -fx-text-fill: #cccccc;");
+            powerUpDesc.setWrapText(true);
+            powerUpInfo.getChildren().addAll(powerUpName, powerUpDesc);
+            
+            // Quantity label (prominently displayed)
+            Label quantityLabel = new Label("x0");
+            quantityLabel.setId("powerup_" + powerUp.name() + "_qty");
+            quantityLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #00ff00; -fx-font-weight: bold; -fx-min-width: 40px;");
+            
+            powerUpRow.getChildren().addAll(powerUpInfo, quantityLabel);
+            powerUpsContainer.getChildren().add(powerUpRow);
+        }
+        
+        // Update UI periodically
+        javafx.animation.Timeline uiUpdater = new javafx.animation.Timeline(
+            new KeyFrame(Duration.millis(500), ae -> updatePowerUpUI())
+        );
+        uiUpdater.setCycleCount(Timeline.INDEFINITE);
+        uiUpdater.play();
+    }
+
+    /**
+     * Update power-up UI to reflect current quantities
+     */
+    private void updatePowerUpUI() {
+        if (gameController == null || powerUpsContainer == null) {
+            return;
+        }
+        
+        for (PowerUp powerUp : PowerUp.values()) {
+            int quantity = gameController.getPowerUpManager().getPowerUpQuantity(powerUp);
+            
+            // Find quantity label
+            javafx.scene.Node node = powerUpsContainer.lookup("#powerup_" + powerUp.name() + "_qty");
+            if (node instanceof Label) {
+                Label qtyLabel = (Label) node;
+                qtyLabel.setText("x" + quantity);
+                
+                // Change color based on quantity
+                if (quantity > 0) {
+                    qtyLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #00ff00; -fx-font-weight: bold; -fx-min-width: 40px;");
+                } else {
+                    qtyLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #ff0000; -fx-font-weight: bold; -fx-min-width: 40px;");
+                }
+            }
+        }
     }
 }

@@ -18,6 +18,18 @@
                 <Label text="LINES:" styleClass="hud-title"/>
                 <Label fx:id="linesLabel" text="0" styleClass="hud-value"/>
             </VBox>
+            <VBox alignment="CENTER_LEFT" spacing="5">
+                <Label text="SKILL PTS:" styleClass="hud-title"/>
+                <Label fx:id="skillPointsLabel" text="0" styleClass="hud-value"/>
+            </VBox>
+        </VBox>
+
+        <!-- Power-Ups Panel -->
+        <VBox alignment="TOP_LEFT" spacing="10" layoutX="200" layoutY="450" style="-fx-background-color: rgba(0,0,0,0.7); -fx-padding: 15; -fx-background-radius: 10;">
+            <Label text="POWER-UPS" styleClass="hud-title" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+            <VBox fx:id="powerUpsContainer" spacing="8">
+                <!-- Power-ups will be added dynamically -->
+            </VBox>
         </VBox>
 
         <!-- Next Piece Preview -->
@@ -50,7 +62,7 @@
 
     <!-- MAIN MENU OVERLAY -->
     <StackPane fx:id="mainMenuOverlay"
-               style="-fx-background-image: url('pastel.jpg'); -fx-background-size: cover; -fx-background-position: center center;"
+               style="-fx-background-image: url('galaxy_main.jpg'); -fx-background-size: cover; -fx-background-position: center center;"
                alignment="CENTER">
         <VBox alignment="CENTER" spacing="40">
             <!-- Title -->
@@ -71,7 +83,7 @@
         </VBox>
     </StackPane>
 
-    <!-- FULL-SCREEN PAUSE OVERLAY - Simplified without card -->
+    <!-- FULL-SCREEN PAUSE OVERLAY -->
     <StackPane fx:id="pauseOverlay"
                visible="false"
                style="-fx-background-color: rgba(0,0,0,0.85);"
