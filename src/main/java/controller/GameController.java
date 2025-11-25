@@ -28,14 +28,6 @@ public class GameController implements InputEventListener {
         ClearRow clearRow = null;
         if (!canMove) {
             board.mergeBrickToBackground();
-            
-            // Check if bomb effect should be shown
-            SimpleBoard simpleBoard = (SimpleBoard) board;
-            if (simpleBoard.shouldShowBombEffect()) {
-                viewGuiController.showBoomEffect(simpleBoard.getBombEffectX(), simpleBoard.getBombEffectY());
-                simpleBoard.clearBombEffectFlag();
-            }
-            
             clearRow = board.clearRows();
             if (clearRow.getLinesRemoved() > 0) {
                 int bonus = clearRow.getScoreBonus();
@@ -94,6 +86,14 @@ public class GameController implements InputEventListener {
         
         // Now merge the brick and process
         board.mergeBrickToBackground();
+        
+        // Check if bomb effect should be shown (only on hard drop)
+        SimpleBoard simpleBoard = (SimpleBoard) board;
+        if (simpleBoard.shouldShowBombEffect()) {
+            viewGuiController.showBoomEffect(simpleBoard.getBombEffectX(), simpleBoard.getBombEffectY());
+            simpleBoard.clearBombEffectFlag();
+        }
+        
         ClearRow clearRow = board.clearRows();
         if (clearRow.getLinesRemoved() > 0) {
             int bonus = clearRow.getScoreBonus();
