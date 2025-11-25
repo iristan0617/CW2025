@@ -18,13 +18,16 @@ https://github.com/iristan0617/CW2025.git
 - Score and lines display
 - Next piece preview
 - Pause menu overlay
-
+- Main Menu
+- Hold piece function
+- 3 differnet Power-Ups
+  
 ## Implemented but Not Working Properly
 - [Feature with issues]
 - [Another feature with problems]
 
 ## Features Not Implemented
-- Pause menu buttons in game
+- 
 
 ## New Java Classes
 - [Class Name]: [Purpose] - [Location]
