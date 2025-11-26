@@ -65,7 +65,12 @@ public class GuiController implements Initializable {
     @FXML private Label skillPointsLabel;
     @FXML private GridPane nextPanel;
     @FXML private GridPane holdPanel;
-    @FXML private VBox powerUpsContainer;
+    @FXML private HBox powerUpsContainer;
+    @FXML private HBox powerUpsContainerCentered;
+    @FXML private VBox powerUpsPanel;
+    @FXML private StackPane powerUpsOverlay;
+    @FXML private VBox powerUpsInventoryDisplay;
+    @FXML private HBox powerUpsInventoryContainer;
     @FXML private StackPane pauseOverlay;
     @FXML private StackPane mainMenuOverlay;
     @FXML private StackPane rootStackPane; // Root StackPane from FXML
@@ -95,6 +100,11 @@ public class GuiController implements Initializable {
 
     private final BooleanProperty isPause = new SimpleBooleanProperty();
     private final BooleanProperty isGameOver = new SimpleBooleanProperty();
+    
+    // Countdown overlay for resume
+    private StackPane countdownOverlay;
+    private Label countdownLabel;
+    private Timeline countdownTimer;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -210,7 +220,17 @@ public class GuiController implements Initializable {
                     newGame(null);
                 }
                 if (keyEvent.getCode() == KeyCode.P || keyEvent.getCode() == KeyCode.ESCAPE) {
-                    setPaused(!isPause.get());
+                    // If countdown is showing, cancel it and stay paused
+                    if (countdownOverlay != null && countdownOverlay.isVisible()) {
+                        cancelCountdown();
+                        keyEvent.consume();
+                    } else {
+                        setPaused(!isPause.get());
+                        keyEvent.consume();
+                    }
+                }
+                if (keyEvent.getCode() == KeyCode.B) {
+                    togglePowerUpsOverlay();
                     keyEvent.consume();
                 }
             }
@@ -220,6 +240,9 @@ public class GuiController implements Initializable {
         if (pauseOverlay != null) pauseOverlay.setVisible(false);
         // Main menu is visible by default
         if (mainMenuOverlay != null) mainMenuOverlay.setVisible(true);
+        
+        // Initialize countdown overlay
+        initializeCountdownOverlay();
 
         if (scoreLabel != null) {
             if (scoreLabel.textProperty().isBound()) {
@@ -241,6 +264,7 @@ public class GuiController implements Initializable {
         // Game content will be shown when Start button is clicked
         Platform.runLater(() -> {
             if (gameBoard != null) gameBoard.setVisible(false);
+            if (powerUpsInventoryDisplay != null) powerUpsInventoryDisplay.setVisible(false);
             // Hide score and next panel containers
             if (scoreLabel != null) {
                 Node parent = scoreLabel.getParent();
@@ -279,6 +303,28 @@ public class GuiController implements Initializable {
 
         // Setup video background
         setupVideoBackground();
+    }
+
+    private void initializeCountdownOverlay() {
+        // Create countdown overlay
+        countdownOverlay = new StackPane();
+        countdownOverlay.setStyle("-fx-background-color: rgba(0,0,0,0.7);");
+        countdownOverlay.setVisible(false);
+        countdownOverlay.setMouseTransparent(false); // Block input during countdown
+        
+        // Create countdown label
+        countdownLabel = new Label();
+        countdownLabel.setStyle(
+            "-fx-font-size: 120px; " +
+            "-fx-font-weight: bold; " +
+            "-fx-text-fill: #ffff00; " +
+            "-fx-effect: dropshadow(gaussian, rgba(255,255,0,0.9), 20, 0.8, 0, 4);"
+        );
+        
+        countdownOverlay.getChildren().add(countdownLabel);
+        countdownOverlay.setAlignment(javafx.geometry.Pos.CENTER);
+        
+        // Add to root stack pane (will be added when needed)
     }
 
     private void setupVideoBackground() {
@@ -699,24 +745,94 @@ public class GuiController implements Initializable {
     }
 
     private void setPaused(boolean paused) {
-        isPause.setValue(paused);
-        if (timeLine != null) {
-            if (paused) timeLine.pause(); else timeLine.play();
-        }
-        if (pauseOverlay != null) {
-            if (paused) {
-                pauseOverlay.setVisible(true);
-                pauseOverlay.toFront(); // Ensure it's on top
-            } else {
-                pauseOverlay.setVisible(false);
+        if (paused) {
+            // Pausing - immediate
+            isPause.setValue(true);
+            if (timeLine != null) {
+                timeLine.pause();
             }
+            if (pauseOverlay != null) {
+                pauseOverlay.setVisible(true);
+                pauseOverlay.toFront();
+            }
+        } else {
+            // Unpausing - show countdown first
+            showResumeCountdown();
+        }
+    }
+    
+    private void showResumeCountdown() {
+        // Don't show countdown if already counting down or if game is over
+        if (countdownOverlay != null && countdownOverlay.isVisible()) {
+            return;
+        }
+        if (isGameOver.getValue()) {
+            return;
+        }
+        
+        // Stop any existing countdown timer
+        if (countdownTimer != null) {
+            countdownTimer.stop();
+        }
+        
+        // Ensure countdown overlay is in root stack pane
+        if (rootStackPane != null && !rootStackPane.getChildren().contains(countdownOverlay)) {
+            rootStackPane.getChildren().add(countdownOverlay);
+        }
+        
+        // Hide pause overlay during countdown
+        if (pauseOverlay != null) {
+            pauseOverlay.setVisible(false);
+        }
+        
+        // Show countdown overlay
+        countdownOverlay.setVisible(true);
+        countdownOverlay.toFront();
+        
+        // Start countdown from 3
+        int[] countdownValue = {3};
+        countdownLabel.setText(String.valueOf(countdownValue[0]));
+        
+        // Create countdown timeline
+        countdownTimer = new Timeline(new KeyFrame(Duration.seconds(1), ae -> {
+            countdownValue[0]--;
+            if (countdownValue[0] > 0) {
+                countdownLabel.setText(String.valueOf(countdownValue[0]));
+            } else {
+                // Countdown finished - actually resume
+                countdownOverlay.setVisible(false);
+                countdownTimer.stop();
+                
+                // Actually unpause now
+                isPause.setValue(false);
+                if (timeLine != null) {
+                    timeLine.play();
+                }
+                gamePanel.requestFocus();
+            }
+        }));
+        countdownTimer.setCycleCount(3); // 3 seconds
+        countdownTimer.play();
+    }
+    
+    private void cancelCountdown() {
+        if (countdownTimer != null) {
+            countdownTimer.stop();
+        }
+        if (countdownOverlay != null) {
+            countdownOverlay.setVisible(false);
+        }
+        // Show pause overlay again
+        if (pauseOverlay != null) {
+            pauseOverlay.setVisible(true);
+            pauseOverlay.toFront();
         }
     }
 
     @FXML
     private void onResume(ActionEvent e) {
+        // setPaused(false) will trigger the countdown
         setPaused(false);
-        gamePanel.requestFocus();
     }
 
     @FXML
@@ -734,6 +850,7 @@ public class GuiController implements Initializable {
         
         // Show game content
         if (gameBoard != null) gameBoard.setVisible(true);
+        if (powerUpsInventoryDisplay != null) powerUpsInventoryDisplay.setVisible(true);
         // Show score and next panel containers
         if (scoreLabel != null) {
             Node parent = scoreLabel.getParent();
@@ -827,6 +944,7 @@ public class GuiController implements Initializable {
         
         // Hide game content
         if (gameBoard != null) gameBoard.setVisible(false);
+        if (powerUpsInventoryDisplay != null) powerUpsInventoryDisplay.setVisible(false);
         if (scoreLabel != null) {
             Node parent = scoreLabel.getParent();
             if (parent != null && parent.getParent() != null) {
@@ -1018,72 +1136,468 @@ public class GuiController implements Initializable {
     }
 
     /**
-     * Initialize the power-up UI panel with buttons for each power-up
+     * Initialize the power-up UI panel with card-based design
      */
     private void initializePowerUpUI() {
-        if (powerUpsContainer == null || gameController == null) {
+        if (gameController == null) {
             return;
         }
         
-        powerUpsContainer.getChildren().clear();
+        // Clear both containers
+        if (powerUpsContainer != null) {
+            powerUpsContainer.getChildren().clear();
+        }
+        if (powerUpsContainerCentered != null) {
+            powerUpsContainerCentered.getChildren().clear();
+        }
         
         PowerUp[] powerUps = PowerUp.values();
         for (int i = 0; i < powerUps.length; i++) {
             PowerUp powerUp = powerUps[i];
             int keyNumber = i + 1; // 1, 2, 3 for the three power-ups
             
-            HBox powerUpRow = new HBox(10);
-            powerUpRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            // Create card container
+            VBox card = new VBox(10);
+            card.setAlignment(javafx.geometry.Pos.CENTER);
+            card.setPrefWidth(140);
+            card.setMinWidth(140);
+            card.setMaxWidth(140);
+            card.setStyle(
+                "-fx-background-color: rgba(30, 30, 40, 0.9); " +
+                "-fx-background-radius: 15; " +
+                "-fx-border-radius: 15; " +
+                "-fx-border-color: rgba(255, 255, 255, 0.3); " +
+                "-fx-border-width: 2; " +
+                "-fx-padding: 15; " +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 8, 0.0, 0, 2);"
+            );
             
-            // Power-up name and description with key binding
-            VBox powerUpInfo = new VBox(2);
-            Label powerUpName = new Label("[" + keyNumber + "] " + powerUp.getName() + " (" + powerUp.getCost() + "pts)");
-            powerUpName.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #ffff00;");
-            Label powerUpDesc = new Label(powerUp.getDescription() + " (Press " + keyNumber + " to use, Shift+" + keyNumber + " to buy)");
-            powerUpDesc.setStyle("-fx-font-size: 9px; -fx-text-fill: #cccccc;");
-            powerUpDesc.setWrapText(true);
-            powerUpInfo.getChildren().addAll(powerUpName, powerUpDesc);
+            // Icon/Visual representation (using emoji/symbols)
+            Label iconLabel = new Label(getPowerUpIcon(powerUp));
+            iconLabel.setStyle(
+                "-fx-font-size: 48px; " +
+                "-fx-alignment: center; " +
+                "-fx-padding: 10 0 5 0;"
+            );
+            iconLabel.setId("powerup_" + powerUp.name() + "_icon");
             
-            // Quantity label (prominently displayed)
+            // Power-up name
+            Label nameLabel = new Label(powerUp.getName());
+            nameLabel.setStyle(
+                "-fx-font-size: 14px; " +
+                "-fx-font-weight: bold; " +
+                "-fx-text-fill: #ffff00; " +
+                "-fx-alignment: center;"
+            );
+            nameLabel.setWrapText(true);
+            nameLabel.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+            
+            // Large quantity display
             Label quantityLabel = new Label("x0");
             quantityLabel.setId("powerup_" + powerUp.name() + "_qty");
-            quantityLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #00ff00; -fx-font-weight: bold; -fx-min-width: 40px;");
+            quantityLabel.setStyle(
+                "-fx-font-size: 32px; " +
+                "-fx-font-weight: bold; " +
+                "-fx-text-fill: #00ff00; " +
+                "-fx-alignment: center; " +
+                "-fx-padding: 5 0;"
+            );
             
-            powerUpRow.getChildren().addAll(powerUpInfo, quantityLabel);
-            powerUpsContainer.getChildren().add(powerUpRow);
+            // Action button
+            Button actionButton = new Button();
+            actionButton.setId("powerup_" + powerUp.name() + "_btn");
+            actionButton.setPrefWidth(120);
+            actionButton.setPrefHeight(35);
+            actionButton.setStyle(
+                "-fx-font-size: 12px; " +
+                "-fx-font-weight: bold; " +
+                "-fx-background-radius: 8; " +
+                "-fx-border-radius: 8;"
+            );
+            actionButton.setOnAction(e -> {
+                int quantity = gameController.getPowerUpManager().getPowerUpQuantity(powerUp);
+                if (quantity > 0) {
+                    // Use power-up
+                    gameController.activatePowerUp(powerUp);
+                    updatePowerUpUI();
+                    if (powerUp == PowerUp.ROW_CLEARER) {
+                        refreshGameBackground(gameController.getBoard().getBoardMatrix());
+                    }
+                } else {
+                    // Buy power-up
+                    if (gameController.purchasePowerUp(powerUp)) {
+                        updatePowerUpUI();
+                    }
+                }
+            });
+            
+            // Key binding hint (small text)
+            Label keyHint = new Label("[" + keyNumber + "] to use");
+            keyHint.setStyle(
+                "-fx-font-size: 8px; " +
+                "-fx-text-fill: #aaaaaa; " +
+                "-fx-alignment: center;"
+            );
+            keyHint.setWrapText(true);
+            keyHint.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+            
+            card.getChildren().addAll(iconLabel, nameLabel, quantityLabel, actionButton, keyHint);
+            
+            // Add to original container
+            if (powerUpsContainer != null) {
+                powerUpsContainer.getChildren().add(card);
+            }
+            
+            // Create a copy for the centered overlay
+            VBox cardCentered = new VBox(10);
+            cardCentered.setAlignment(javafx.geometry.Pos.CENTER);
+            cardCentered.setPrefWidth(140);
+            cardCentered.setMinWidth(140);
+            cardCentered.setMaxWidth(140);
+            cardCentered.setStyle(card.getStyle());
+            
+            Label iconLabelCentered = new Label(getPowerUpIcon(powerUp));
+            iconLabelCentered.setStyle(iconLabel.getStyle());
+            iconLabelCentered.setId("powerup_centered_" + powerUp.name() + "_icon");
+            
+            Label nameLabelCentered = new Label(powerUp.getName());
+            nameLabelCentered.setStyle(nameLabel.getStyle());
+            nameLabelCentered.setWrapText(true);
+            nameLabelCentered.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+            
+            Label quantityLabelCentered = new Label("x0");
+            quantityLabelCentered.setId("powerup_centered_" + powerUp.name() + "_qty");
+            quantityLabelCentered.setStyle(quantityLabel.getStyle());
+            
+            Button actionButtonCentered = new Button();
+            actionButtonCentered.setId("powerup_centered_" + powerUp.name() + "_btn");
+            actionButtonCentered.setPrefWidth(120);
+            actionButtonCentered.setPrefHeight(35);
+            actionButtonCentered.setStyle(actionButton.getStyle());
+            actionButtonCentered.setOnAction(actionButton.getOnAction());
+            
+            Label keyHintCentered = new Label("[" + keyNumber + "] to use");
+            keyHintCentered.setStyle(keyHint.getStyle());
+            keyHintCentered.setWrapText(true);
+            keyHintCentered.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+            
+            cardCentered.getChildren().addAll(iconLabelCentered, nameLabelCentered, quantityLabelCentered, actionButtonCentered, keyHintCentered);
+            
+            // Add to centered container
+            if (powerUpsContainerCentered != null) {
+                powerUpsContainerCentered.getChildren().add(cardCentered);
+            }
         }
+        
+        // Initialize inventory display
+        initializePowerUpInventoryDisplay();
         
         // Update UI periodically
         javafx.animation.Timeline uiUpdater = new javafx.animation.Timeline(
-            new KeyFrame(Duration.millis(500), ae -> updatePowerUpUI())
+            new KeyFrame(Duration.millis(500), ae -> {
+                updatePowerUpUI();
+                updatePowerUpInventoryDisplay();
+            })
         );
         uiUpdater.setCycleCount(Timeline.INDEFINITE);
         uiUpdater.play();
     }
-
+    
     /**
-     * Update power-up UI to reflect current quantities
+     * Initialize the small power-up inventory display
      */
-    private void updatePowerUpUI() {
-        if (gameController == null || powerUpsContainer == null) {
+    private void initializePowerUpInventoryDisplay() {
+        if (powerUpsInventoryContainer == null || gameController == null) {
+            return;
+        }
+        
+        powerUpsInventoryContainer.getChildren().clear();
+        
+        PowerUp[] powerUps = PowerUp.values();
+        for (PowerUp powerUp : powerUps) {
+            // Create compact inventory item
+            VBox inventoryItem = new VBox(3);
+            inventoryItem.setAlignment(javafx.geometry.Pos.CENTER);
+            inventoryItem.setPrefWidth(50);
+            inventoryItem.setMinWidth(50);
+            
+            // Icon
+            Label iconLabel = new Label(getPowerUpIcon(powerUp));
+            iconLabel.setId("inventory_" + powerUp.name() + "_icon");
+            iconLabel.setStyle(
+                "-fx-font-size: 24px; " +
+                "-fx-alignment: center; " +
+                "-fx-text-fill: #ffffff; " +
+                "-fx-opacity: 0.9;"
+            );
+            
+            // Quantity badge
+            Label qtyLabel = new Label("x0");
+            qtyLabel.setId("inventory_" + powerUp.name() + "_qty");
+            qtyLabel.setStyle(
+                "-fx-font-size: 14px; " +
+                "-fx-font-weight: bold; " +
+                "-fx-text-fill: #00ff00; " +
+                "-fx-alignment: center; " +
+                "-fx-background-color: rgba(0,0,0,0.5); " +
+                "-fx-background-radius: 4; " +
+                "-fx-padding: 2 4;"
+            );
+            
+            inventoryItem.getChildren().addAll(iconLabel, qtyLabel);
+            powerUpsInventoryContainer.getChildren().add(inventoryItem);
+        }
+    }
+    
+    /**
+     * Update the power-up inventory display
+     */
+    private void updatePowerUpInventoryDisplay() {
+        if (gameController == null || powerUpsInventoryContainer == null) {
             return;
         }
         
         for (PowerUp powerUp : PowerUp.values()) {
             int quantity = gameController.getPowerUpManager().getPowerUpQuantity(powerUp);
             
-            // Find quantity label
-            javafx.scene.Node node = powerUpsContainer.lookup("#powerup_" + powerUp.name() + "_qty");
-            if (node instanceof Label) {
-                Label qtyLabel = (Label) node;
+            // Update quantity label
+            javafx.scene.Node qtyNode = powerUpsInventoryContainer.lookup("#inventory_" + powerUp.name() + "_qty");
+            if (qtyNode instanceof Label) {
+                Label qtyLabel = (Label) qtyNode;
                 qtyLabel.setText("x" + quantity);
                 
-                // Change color based on quantity
+                // Change color and visibility based on quantity
                 if (quantity > 0) {
-                    qtyLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #00ff00; -fx-font-weight: bold; -fx-min-width: 40px;");
+                    qtyLabel.setStyle(
+                        "-fx-font-size: 14px; " +
+                        "-fx-font-weight: bold; " +
+                        "-fx-text-fill: #00ff00; " +
+                        "-fx-alignment: center; " +
+                        "-fx-background-color: rgba(0,255,0,0.2); " +
+                        "-fx-background-radius: 4; " +
+                        "-fx-padding: 2 4;"
+                    );
+                    qtyLabel.setVisible(true);
                 } else {
-                    qtyLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #ff0000; -fx-font-weight: bold; -fx-min-width: 40px;");
+                    qtyLabel.setStyle(
+                        "-fx-font-size: 14px; " +
+                        "-fx-font-weight: bold; " +
+                        "-fx-text-fill: #666666; " +
+                        "-fx-alignment: center; " +
+                        "-fx-background-color: rgba(0,0,0,0.3); " +
+                        "-fx-background-radius: 4; " +
+                        "-fx-padding: 2 4;"
+                    );
+                    qtyLabel.setVisible(true);
                 }
+            }
+            
+            // Update icon opacity based on availability
+            javafx.scene.Node iconNode = powerUpsInventoryContainer.lookup("#inventory_" + powerUp.name() + "_icon");
+            if (iconNode instanceof Label) {
+                Label iconLabel = (Label) iconNode;
+                if (quantity > 0) {
+                    iconLabel.setStyle(
+                        "-fx-font-size: 24px; " +
+                        "-fx-alignment: center; " +
+                        "-fx-text-fill: #ffffff; " +
+                        "-fx-opacity: 1.0; " +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,255,0,0.6), 8, 0.0, 0, 0), " +
+                        "dropshadow(gaussian, rgba(255,255,255,0.3), 5, 0.0, 0, 0);"
+                    );
+                } else {
+                    iconLabel.setStyle(
+                        "-fx-font-size: 24px; " +
+                        "-fx-alignment: center; " +
+                        "-fx-text-fill: #cccccc; " +
+                        "-fx-opacity: 0.7;"
+                    );
+                }
+            }
+        }
+    }
+    
+    /**
+     * Get icon/symbol for power-up
+     */
+    private String getPowerUpIcon(PowerUp powerUp) {
+        switch (powerUp) {
+            case ROW_CLEARER:
+                return "🧹"; // Broom icon
+            case SLOW_MOTION:
+                return "⏱️"; // Hourglass icon
+            case BOMB_PIECE:
+                return "💣"; // Bomb icon
+            default:
+                return "⚡"; // Default icon
+        }
+    }
+
+    /**
+     * Update power-up UI to reflect current quantities and button states
+     */
+    private void updatePowerUpUI() {
+        if (gameController == null) {
+            return;
+        }
+        
+        for (PowerUp powerUp : PowerUp.values()) {
+            int quantity = gameController.getPowerUpManager().getPowerUpQuantity(powerUp);
+            int skillPoints = gameController.getPowerUpManager().getSkillPoints();
+            int cost = powerUp.getCost();
+            
+            // Update both containers (original and centered)
+            updatePowerUpCard(powerUp, quantity, skillPoints, cost, "");
+            updatePowerUpCard(powerUp, quantity, skillPoints, cost, "_centered");
+        }
+    }
+    
+    /**
+     * Helper method to update a single power-up card
+     */
+    private void updatePowerUpCard(PowerUp powerUp, int quantity, int skillPoints, int cost, String suffix) {
+        HBox container = suffix.isEmpty() ? powerUpsContainer : powerUpsContainerCentered;
+        if (container == null) return;
+        
+        String prefix = "powerup" + suffix;
+        
+        // Update quantity label
+        javafx.scene.Node qtyNode = container.lookup("#" + prefix + "_" + powerUp.name() + "_qty");
+        if (qtyNode instanceof Label) {
+            Label qtyLabel = (Label) qtyNode;
+            qtyLabel.setText("x" + quantity);
+            
+            // Change color based on quantity
+            if (quantity > 0) {
+                qtyLabel.setStyle(
+                    "-fx-font-size: 32px; " +
+                    "-fx-font-weight: bold; " +
+                    "-fx-text-fill: #00ff00; " +
+                    "-fx-alignment: center; " +
+                    "-fx-padding: 5 0;"
+                );
+            } else {
+                qtyLabel.setStyle(
+                    "-fx-font-size: 32px; " +
+                    "-fx-font-weight: bold; " +
+                    "-fx-text-fill: #ff6666; " +
+                    "-fx-alignment: center; " +
+                    "-fx-padding: 5 0;"
+                );
+            }
+        }
+        
+        // Update action button
+        javafx.scene.Node btnNode = container.lookup("#" + prefix + "_" + powerUp.name() + "_btn");
+        if (btnNode instanceof Button) {
+            Button actionBtn = (Button) btnNode;
+            
+            if (quantity > 0) {
+                // Show "Use" button
+                actionBtn.setText("USE [1]");
+                actionBtn.setStyle(
+                    "-fx-font-size: 12px; " +
+                    "-fx-font-weight: bold; " +
+                    "-fx-background-color: linear-gradient(to bottom, #2ecc71, #27ae60); " +
+                    "-fx-text-fill: white; " +
+                    "-fx-background-radius: 8; " +
+                    "-fx-border-radius: 8; " +
+                    "-fx-cursor: hand;"
+                );
+                actionBtn.setDisable(false);
+            } else {
+                // Show "Buy" button
+                actionBtn.setText("BUY " + cost + "pts");
+                if (skillPoints >= cost) {
+                    actionBtn.setStyle(
+                        "-fx-font-size: 12px; " +
+                        "-fx-font-weight: bold; " +
+                        "-fx-background-color: linear-gradient(to bottom, #3498db, #2980b9); " +
+                        "-fx-text-fill: white; " +
+                        "-fx-background-radius: 8; " +
+                        "-fx-border-radius: 8; " +
+                        "-fx-cursor: hand;"
+                    );
+                    actionBtn.setDisable(false);
+                } else {
+                    actionBtn.setStyle(
+                        "-fx-font-size: 12px; " +
+                        "-fx-font-weight: bold; " +
+                        "-fx-background-color: linear-gradient(to bottom, #7f8c8d, #5d6d7e); " +
+                        "-fx-text-fill: #cccccc; " +
+                        "-fx-background-radius: 8; " +
+                        "-fx-border-radius: 8; " +
+                        "-fx-cursor: default;"
+                    );
+                    actionBtn.setDisable(true);
+                }
+            }
+        }
+        
+        // Update icon glow effect based on availability
+        javafx.scene.Node iconNode = container.lookup("#" + prefix + "_" + powerUp.name() + "_icon");
+        if (iconNode instanceof Label) {
+            Label iconLabel = (Label) iconNode;
+            if (quantity > 0) {
+                iconLabel.setStyle(
+                    "-fx-font-size: 48px; " +
+                    "-fx-alignment: center; " +
+                    "-fx-padding: 10 0 5 0; " +
+                    "-fx-effect: dropshadow(gaussian, rgba(0,255,0,0.6), 10, 0.0, 0, 0);"
+                );
+            } else {
+                iconLabel.setStyle(
+                    "-fx-font-size: 48px; " +
+                    "-fx-alignment: center; " +
+                    "-fx-padding: 10 0 5 0;"
+                );
+            }
+        }
+    }
+    
+    /**
+     * Toggle power-ups overlay visibility
+     */
+    private void togglePowerUpsOverlay() {
+        if (powerUpsOverlay == null) return;
+        
+        boolean isVisible = powerUpsOverlay.isVisible();
+        powerUpsOverlay.setVisible(!isVisible);
+        
+        if (!isVisible) {
+            // Show centered overlay
+            powerUpsOverlay.toFront();
+            // Make sure overlay doesn't block keyboard input
+            powerUpsOverlay.setMouseTransparent(false);
+            // Set up key handler for overlay
+            powerUpsOverlay.setOnKeyPressed(e -> {
+                if (e.getCode() == KeyCode.B) {
+                    togglePowerUpsOverlay();
+                    e.consume();
+                }
+            });
+            // Request focus so it can receive key events
+            powerUpsOverlay.requestFocus();
+            // Hide the original power-up panel
+            if (powerUpsPanel != null) {
+                powerUpsPanel.setVisible(false);
+            }
+            // Pause the game (only if not already paused)
+            if (!isPause.getValue() && timeLine != null && timeLine.getStatus() == javafx.animation.Animation.Status.RUNNING) {
+                timeLine.pause();
+            }
+        } else {
+            // Hide overlay, keep original panel hidden (as per requirement)
+            if (powerUpsPanel != null) {
+                powerUpsPanel.setVisible(false);
+            }
+            // Return focus to game panel
+            if (gamePanel != null) {
+                gamePanel.requestFocus();
+            }
+            // Resume the game (only if not paused by pause menu)
+            if (!isPause.getValue() && timeLine != null && timeLine.getStatus() == javafx.animation.Animation.Status.PAUSED) {
+                timeLine.play();
             }
         }
     }

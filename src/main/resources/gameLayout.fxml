@@ -24,12 +24,21 @@
             </VBox>
         </VBox>
 
-        <!-- Power-Ups Panel -->
-        <VBox alignment="TOP_LEFT" spacing="10" layoutX="200" layoutY="450" style="-fx-background-color: rgba(0,0,0,0.7); -fx-padding: 15; -fx-background-radius: 10;">
+        <!-- Power-Ups Inventory Display (Small HUD) -->
+        <VBox fx:id="powerUpsInventoryDisplay" alignment="TOP_LEFT" spacing="8" layoutX="400" layoutY="450" 
+              style="-fx-background-color: rgba(0,0,0,0.6); -fx-padding: 10; -fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: rgba(255,255,255,0.2); -fx-border-width: 1;">
+            <Label text="POWER-UPS" styleClass="hud-title" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+            <HBox fx:id="powerUpsInventoryContainer" spacing="12" alignment="CENTER_LEFT">
+                <!-- Power-up inventory items will be added dynamically -->
+            </HBox>
+        </VBox>
+
+        <!-- Power-Ups Panel (Hidden by default) -->
+        <VBox fx:id="powerUpsPanel" alignment="TOP_LEFT" spacing="15" layoutX="200" layoutY="450" style="-fx-background-color: rgba(0,0,0,0.7); -fx-padding: 15; -fx-background-radius: 10;" visible="false">
             <Label text="POWER-UPS" styleClass="hud-title" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
-            <VBox fx:id="powerUpsContainer" spacing="8">
-                <!-- Power-ups will be added dynamically -->
-            </VBox>
+            <HBox fx:id="powerUpsContainer" spacing="15" alignment="CENTER_LEFT">
+                <!-- Power-ups will be added dynamically as cards -->
+            </HBox>
         </VBox>
 
         <!-- Next Piece Preview -->
@@ -76,10 +85,27 @@
                         style="-fx-pref-height: 70px; -fx-min-width: 250px; -fx-pref-width: 300px; -fx-font-size: 32px; -fx-font-weight: bold;" />
                 
                 <Button text="EXIT"
+                        fx:id="exitButton"
                         onAction="#onExit"
                         styleClass="mainMenuButton"
-                        style="-fx-pref-height: 70px; -fx-min-width: 250px; -fx-pref-width: 300px; -fx-font-size: 32px; -fx-font-weight: bold;" />
+                        style="-fx-pref-height: 70px; -fx-min-width: 250px; -fx-pref-width: 300px; -fx-font-size: 32px; -fx-font-weight: bold; -fx-background-color: linear-gradient(to bottom, #ffb6c1, #ff91a4);" />
             </VBox>
+        </VBox>
+    </StackPane>
+
+    <!-- CENTERED POWER-UPS OVERLAY -->
+    <StackPane fx:id="powerUpsOverlay"
+               visible="false"
+               focusTraversable="true"
+               style="-fx-background-color: rgba(0,0,0,0.85);"
+               alignment="CENTER">
+        <VBox alignment="CENTER" spacing="20">
+            <Label text="POWER-UPS" styleClass="hud-title" style="-fx-font-size: 32px; -fx-font-weight: bold;"/>
+            <HBox fx:id="powerUpsContainerCentered" spacing="20" alignment="CENTER">
+                <!-- Power-ups will be added dynamically as cards -->
+            </HBox>
+            <Label text="Press B to Close"
+                   style="-fx-font-size: 18px; -fx-text-fill: #aaaaaa; -fx-padding: 10 0 0 0;" />
         </VBox>
     </StackPane>
 
