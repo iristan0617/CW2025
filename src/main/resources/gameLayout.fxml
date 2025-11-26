@@ -3,7 +3,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.*?>
 <?import java.net.URL?>
-<StackPane fx:id="rootStackPane" fx:controller="controller.GuiController"
+<StackPane fx:id="rootStackPane" fx:controller="controller.gui.GuiController"
            xmlns:fx="http://javafx.com/fxml">
 
     <!-- Main game content -->
