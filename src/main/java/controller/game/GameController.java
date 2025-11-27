@@ -1,5 +1,6 @@
-package controller;
+package controller.game;
 
+import controller.gui.GuiController;
 import model.Board;
 import model.DownData;
 import model.PowerUp;

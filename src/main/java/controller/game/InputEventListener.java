@@ -1,4 +1,4 @@
-package controller;
+package controller.game;
 
 import model.DownData;
 import model.ViewData;

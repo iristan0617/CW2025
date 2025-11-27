@@ -1,4 +1,4 @@
-package controller;
+package controller.game;
 
 public final class MoveEvent {
     private final EventType eventType;
