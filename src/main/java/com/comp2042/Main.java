@@ -9,9 +9,6 @@ import javafx.stage.Stage;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import controller.GuiController;
-import controller.GameController;
-
 public class Main extends Application {
 
     @Override
@@ -21,13 +18,13 @@ public class Main extends Application {
         ResourceBundle resources = null;
         FXMLLoader fxmlLoader = new FXMLLoader(location, resources);
         Parent root = fxmlLoader.load();
-        GuiController c = fxmlLoader.getController();
+        // Controller is initialized via FXML, game starts when user clicks Start button
 
         primaryStage.setTitle("TetrisJFX");
         Scene scene = new Scene(root, 300, 510);
         primaryStage.setScene(scene);
         primaryStage.show();
-        new GameController(c);
+        // Game will be initialized when user clicks Start
     }
 
 
