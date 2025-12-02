@@ -22,10 +22,20 @@
 - **Common fixes**
   - FXML controller errors → ensure `gameLayout.fxml` references `controller.gui.GuiController`
   - Missing JavaFX modules → always use Maven run goal
-  - Version mismatch → set both IDE and Maven to JDK 17+
+  - Version mismatch → set both IDE and Maven to JDK 17+
 
 ---
 
+## 3. Key Modifications Overview
+
+This coursework involved a comprehensive refactoring of the Tetris codebase to improve maintainability and extensibility. The main focus was applying the Single Responsibility Principle (SRP) by splitting the monolithic `GuiController` into specialized helper classes. Key modifications include:
+
+- **Architecture Refactoring**: Split `GuiController` into 7 specialized manager classes handling keyboard input, rendering, effects, pause/resume, slow-motion, video, and power-ups
+- **Package Reorganization**: Moved game logic classes into `controller.game` package for better separation of concerns
+- **Feature Additions**: Implemented pause system with countdown, power-up shop, skill points economy, and enhanced UI features
+- **Bug Fixes**: Resolved pause countdown issue where blocks continued dropping during resume countdown
+
+---
 
 ## 4. Implemented & Working Properly
 
@@ -79,24 +89,97 @@
 ---
 
 ## 8. New Java Classes
-- `controller.gui.GuiControllerKeyboardHandler` – keyboard shortcuts (move, hold, power-ups, pause)
-- `controller.gui.GuiControllerRenderer` – board/preview/ghost rendering + `Timeline` management
-- `controller.gui.GuiControllerEffectManager` – boom effect + board centring utilities
-- `controller.gui.GuiControllerPauseManager` – pause state + resume countdown overlay
-- `controller.gui.GuiControllerSlowMotionManager` – slow-motion timelines and countdown label updates
-- `controller.gui.GuiControllerVideoManager` – background video player lifecycle
-- `controller.gui.GuiControllerPowerUpManager` – builds HUD/overlay, updates counts, binds buttons to `GameController`
-- `controller.game` package (`GameController`, `EventSource`, `EventType`, `MoveEvent`, `InputEventListener`) – reorganised into gameplay-specific namespace
-- `src/test/java/model/ScoreTest` – regression tests for `Score` initial state, add, and reset
+
+### GUI Helper Classes (Location: `src/main/java/controller/gui/`)
+- **`GuiControllerKeyboardHandler.java`** – Handles all keyboard input events (arrow keys for movement, space for hard drop, hold key, power-up activation keys [1-3], pause/resume with ESC/P, shop toggle with B). Extracted from `GuiController` to separate input handling concerns.
+
+- **`GuiControllerRenderer.java`** – Centralizes all rendering logic including game board display, next piece preview, hold piece preview, ghost piece projection, and board centering calculations. Manages the main game `Timeline` for block dropping.
+
+- **`GuiControllerEffectManager.java`** – Manages visual effects including the boom/explosion effect for bomb power-ups and board centering utilities. Provides animation effects for enhanced gameplay feedback.
+
+- **`GuiControllerPauseManager.java`** – Handles pause/resume functionality including pause overlay display, 3-second countdown before resuming, and immediate pause on ESC key press. Ensures game state remains paused during countdown to prevent blocks from dropping.
+
+- **`GuiControllerSlowMotionManager.java`** – Manages slow-motion power-up functionality including timeline speed adjustments and countdown label updates showing remaining slow-motion duration.
+
+- **`GuiControllerVideoManager.java`** – Handles background video playback lifecycle including video loading, playback control, and resource management for the ambient background video.
+
+- **`GuiControllerPowerUpManager.java`** – Manages power-up HUD/overlay display, updates power-up inventory counts, and binds shop buttons to `GameController` for purchasing power-ups. Handles skill points display and shop UI interactions.
+
+### Game Controller Package (Location: `src/main/java/controller/game/`)
+- **`GameController.java`** – Main game orchestration class implementing `InputEventListener`. Coordinates board updates, power-up management, and GUI callbacks. Moved from root `controller` package to `controller.game` for better organization.
+
+- **`EventSource.java`**, **`EventType.java`**, **`MoveEvent.java`**, **`InputEventListener.java`** – Event handling classes reorganized into `controller.game` package to group gameplay-specific event logic together.
+
+### Test Classes (Location: `src/test/java/model/`)
+- **`ScoreTest.java`** – Unit tests for `Score` class ensuring scoring logic remains functional after refactoring. Tests initial state, score addition, and reset functionality.
 
 ---
 
 ## 9. Modified Java Classes
-- `controller.gui.GuiController` – split from monolith into an orchestrator that wires keyboard, renderer, pause, slow-motion, power-up, effect, and video managers plus owns the `GameController` lifecycle.
-- `controller.game.GameController` – reworked to implement `InputEventListener`, integrate skill-point accounting, trigger GUI callbacks, and coordinate `Board` updates.
-- `model.SimpleBoard` – enhanced collision/bomb handling, integrates `PowerUpManager`, and produces richer `DownData`/`ViewData` payloads.
-- `model.Score` – extended to track both score and skill points, exposing helpers for shop pricing logic.
-- `model.PowerUpManager` – upgraded inventory tracking, purchase validation, and DTO hand-offs for GUI updates.
+
+### `controller.gui.GuiController`
+- **Location**: `src/main/java/controller/gui/GuiController.java`
+- **Changes Made**:
+  - Refactored from monolithic class (~500+ lines) to orchestrator pattern (~200 lines)
+  - Extracted keyboard handling to `GuiControllerKeyboardHandler` (delegates via `keyboardHandler.createKeyHandler()`)
+  - Extracted rendering logic to `GuiControllerRenderer` (delegates board, preview, ghost rendering)
+  - Extracted pause logic to `GuiControllerPauseManager` (delegates pause/resume operations)
+  - Extracted slow-motion logic to `GuiControllerSlowMotionManager`
+  - Extracted power-up UI management to `GuiControllerPowerUpManager`
+  - Extracted effect management to `GuiControllerEffectManager`
+  - Extracted video management to `GuiControllerVideoManager`
+  - Added `resumeImmediately()` method to support new games without countdown
+- **Rationale**: Applied Single Responsibility Principle to improve maintainability. The original class violated SRP by handling UI, input, rendering, effects, and game state all in one place, making it difficult to test and modify individual components.
+- **Impact**: Each component can now be tested and modified independently. The orchestrator pattern makes the codebase more maintainable and extensible.
+
+### `controller.gui.GuiControllerPauseManager`
+- **Location**: `src/main/java/controller/gui/GuiControllerPauseManager.java`
+- **Changes Made**:
+  - Added explicit pause enforcement at start of `showResumeCountdown()` method (lines 45-49) to ensure `isPause` flag and timeline remain paused during countdown
+  - Added `resumeImmediately()` method (lines 99-117) for new games to start without countdown
+  - Modified `setPaused()` to handle immediate pause on ESC key press
+- **Rationale**: Fixed critical bug where blocks continued dropping during the 3-second resume countdown. The countdown overlay was showing but the game state wasn't properly paused, causing blocks to fall during the countdown period. Also, new games were unnecessarily showing a countdown when they should start immediately.
+- **Impact**: Blocks now correctly pause during resume countdown, and new games start immediately without unnecessary countdown delay.
+
+### `controller.game.GameController`
+- **Location**: `src/main/java/controller/game/GameController.java`
+- **Changes Made**:
+  - Reworked to implement `InputEventListener` interface
+  - Integrated skill-point accounting system that awards skill points based on score bonuses
+  - Added power-up management integration via `PowerUpManager`
+  - Enhanced `onHardDropEvent()` to calculate drop distance and award skill points
+  - Added GUI callback triggers for game state changes
+- **Rationale**: Moved from root `controller` package to `controller.game` for better package organization. Enhanced to support new power-up and skill point systems while maintaining existing gameplay functionality.
+- **Impact**: Better separation of concerns between game logic and UI. Skill points system enables power-up economy.
+
+### `model.SimpleBoard`
+- **Location**: `src/main/java/model/SimpleBoard.java`
+- **Changes Made**:
+  - Enhanced collision detection and bomb handling
+  - Integrated `PowerUpManager` for power-up effects
+  - Enhanced `DownData` and `ViewData` payloads to include additional game state information
+  - Added bomb piece flagging and explosion handling
+- **Rationale**: Extended to support new power-up features (bomb pieces, row clearing) while maintaining core Tetris gameplay mechanics.
+- **Impact**: Enables power-up functionality without breaking existing game logic.
+
+### `model.Score`
+- **Location**: `src/main/java/model/Score.java`
+- **Changes Made**:
+  - Extended to track both score and skill points as separate values
+  - Added helper methods for shop pricing logic
+  - Maintained backward compatibility with existing score tracking
+- **Rationale**: Skill points system needed for power-up economy. Separating score and skill points allows different reward mechanisms.
+- **Impact**: Enables power-up shop functionality where players can purchase power-ups using skill points earned during gameplay.
+
+### `model.PowerUpManager`
+- **Location**: `src/main/java/model/PowerUpManager.java`
+- **Changes Made**:
+  - Upgraded inventory tracking system
+  - Enhanced purchase validation logic
+  - Added DTO (Data Transfer Object) methods for GUI updates
+  - Integrated skill points awarding system
+- **Rationale**: Power-up system required robust inventory management and integration with skill points economy. DTO methods enable clean separation between model and view layers.
+- **Impact**: Provides foundation for power-up shop and inventory management features.
 
 ---
 
@@ -115,9 +198,30 @@
 ---
 
 ## 12. Unexpected Problems & Fixes
-- JavaFX couldn’t find `controller.GuiController` after the move → fixed by updating FXML reference
-- Duplicate helper classes (old vs new) → deleted obsolete `controller/*` helpers so only `controller.gui/*` remain
-- Package ripple effects (imports, resources, docs) → resolved via `mvn clean package`, `mvn javafx:run`, and manual gameplay verification
+
+### Problem 1: FXML Controller Reference Error
+- **Issue**: After moving `GuiController` from `controller` package to `controller.gui` package, JavaFX couldn't find the controller class, causing application startup failures.
+- **Root Cause**: FXML file (`gameLayout.fxml`) still referenced the old package path `controller.GuiController`.
+- **Solution**: Updated FXML file to reference `controller.gui.GuiController` using `fx:controller="controller.gui.GuiController"`.
+- **Verification**: Tested by running `mvn javafx:run` and confirming application starts successfully.
+
+### Problem 2: Duplicate Helper Classes
+- **Issue**: During refactoring, both old helper classes in `controller/*` and new helper classes in `controller.gui/*` existed simultaneously, causing confusion and potential conflicts.
+- **Root Cause**: Incomplete migration during refactoring process.
+- **Solution**: Deleted obsolete `controller/*` helper classes, ensuring only `controller.gui/*` manager classes remain. Verified no imports reference old classes.
+- **Verification**: Searched codebase for references to old classes and confirmed all imports updated.
+
+### Problem 3: Package Ripple Effects
+- **Issue**: Package reorganization caused import errors across multiple files, breaking compilation.
+- **Root Cause**: Moving classes to new packages required updating all import statements throughout the codebase.
+- **Solution**: Systematically updated all import statements, ran `mvn clean package` to verify compilation, and tested with `mvn javafx:run` to ensure runtime functionality.
+- **Verification**: Full compilation success and manual gameplay testing confirmed all functionality intact.
+
+### Problem 4: Blocks Dropping During Resume Countdown
+- **Issue**: When resuming from pause, a 3-second countdown was displayed but blocks continued to drop during the countdown period, defeating the purpose of the pause system.
+- **Root Cause**: The `showResumeCountdown()` method in `GuiControllerPauseManager` was showing the countdown overlay but not explicitly ensuring the game state remained paused. The `isPause` flag and timeline pause state weren't being enforced during countdown.
+- **Solution**: Added explicit pause enforcement at the start of `showResumeCountdown()` method (lines 45-49) to set `isPause = true` and pause the timeline before starting countdown. Also added `resumeImmediately()` method for new games to avoid unnecessary countdown.
+- **Verification**: Tested pause/resume functionality - confirmed blocks stop dropping immediately on ESC press and remain stopped during countdown. Verified new games start immediately without countdown.
 
 ---
 
