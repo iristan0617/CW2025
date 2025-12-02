@@ -7,12 +7,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Manages power-up purchases and inventory
+ * Manages power-up purchases, inventory, and skill points economy.
+ * Tracks player's skill points earned from gameplay and manages power-up inventory.
+ * Handles purchasing power-ups with skill points and using power-ups during gameplay.
+ * 
+ * @author COMP2042 Coursework
  */
 public class PowerUpManager {
     private final Map<PowerUp, Integer> powerUpInventory; // PowerUp -> quantity owned
     private final IntegerProperty skillPoints;
     
+    /**
+     * Constructs a new PowerUpManager.
+     * Initializes skill points to 0 and sets all power-up quantities to 0.
+     */
     public PowerUpManager() {
         this.skillPoints = new SimpleIntegerProperty(0);
         this.powerUpInventory = new HashMap<>();
@@ -24,12 +32,19 @@ public class PowerUpManager {
     }
 
     /**
-     * Get current skill points
+     * Gets the skill points property for reactive UI binding.
+     * 
+     * @return the IntegerProperty representing current skill points
      */
     public IntegerProperty skillPointsProperty() {
         return skillPoints;
     }
 
+    /**
+     * Gets the current skill points value.
+     * 
+     * @return the current number of skill points
+     */
     public int getSkillPoints() {
         return skillPoints.get();
     }
@@ -38,9 +53,11 @@ public class PowerUpManager {
     private double fractionalSkillPoints = 0.0;
     
     /**
-     * Award skill points (called when player earns score)
-     * Convert score to skill points at a rate (1 skill point per 10 score)
-     * Accumulates fractional points so even small scores contribute
+     * Awards skill points based on score earned.
+     * Converts score to skill points at a rate of 1 skill point per 10 score.
+     * Accumulates fractional points so even small scores contribute over time.
+     * 
+     * @param scoreEarned the score points earned by the player
      */
     public void awardSkillPoints(int scoreEarned) {
         // Add fractional points (0.1 skill point per 1 score)

@@ -47,6 +47,21 @@ import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
+/**
+ * Main GUI controller for the Tetris game.
+ * Orchestrates all UI components, manages game state, and coordinates between
+ * the game logic (GameController) and the JavaFX UI. Uses an orchestrator pattern
+ * delegating specific responsibilities to specialized manager classes:
+ * - KeyboardHandler: Input processing
+ * - Renderer: Visual rendering
+ * - PauseManager: Pause/resume functionality
+ * - PowerUpManager: Power-up UI and shop
+ * - EffectManager: Visual effects
+ * - SlowMotionManager: Slow-motion power-up
+ * - VideoManager: Background video
+ * 
+ * @author COMP2042 Coursework
+ */
 public class GuiController implements Initializable {
 
     private static final int BRICK_SIZE = 22;
@@ -341,6 +356,10 @@ public class GuiController implements Initializable {
     void cancelCountdown() {
         pauseManager.cancelCountdown();
     }
+    
+    void resumeImmediately() {
+        pauseManager.resumeImmediately();
+    }
 
     @FXML
     private void onResume(ActionEvent e) {
@@ -349,7 +368,7 @@ public class GuiController implements Initializable {
 
     @FXML
     private void onRestart(ActionEvent e) {
-        setPaused(false);
+        resumeImmediately();
         newGame(null);
     }
 

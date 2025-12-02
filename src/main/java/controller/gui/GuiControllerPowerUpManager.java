@@ -11,17 +11,31 @@ import javafx.util.Duration;
 import model.PowerUp;
 
 /**
- * Manages power-up UI for GuiController
- * Extracted from GuiController to reduce file size
+ * Manages power-up UI for GuiController.
+ * Handles the power-up HUD display, shop overlay, inventory updates, and button
+ * event handling. Manages the skill points display and coordinates with GameController
+ * for purchasing and using power-ups. Extracted from GuiController to apply Single
+ * Responsibility Principle.
+ * 
+ * @author COMP2042 Coursework
  */
 class GuiControllerPowerUpManager {
     
     private final GuiController guiController;
     
+    /**
+     * Constructs a new GuiControllerPowerUpManager.
+     * 
+     * @param guiController the GuiController instance to manage power-up UI for
+     */
     GuiControllerPowerUpManager(GuiController guiController) {
         this.guiController = guiController;
     }
     
+    /**
+     * Initializes the power-up UI including HUD and shop overlays.
+     * Sets up buttons, labels, and event handlers for all power-up functionality.
+     */
     void initializePowerUpUI() {
         if (guiController.gameController == null) {
             return;

@@ -8,8 +8,12 @@ import controller.game.EventType;
 import controller.game.MoveEvent;
 
 /**
- * Manages slow motion power-up effect for GuiController
- * Extracted from GuiController to reduce file size
+ * Manages slow motion power-up effect for GuiController.
+ * Handles timeline speed adjustments, countdown display, and automatic reversion
+ * to normal speed after the power-up duration expires. Extracted from GuiController
+ * to apply Single Responsibility Principle.
+ * 
+ * @author COMP2042 Coursework
  */
 class GuiControllerSlowMotionManager {
     
@@ -18,10 +22,20 @@ class GuiControllerSlowMotionManager {
     
     private final GuiController guiController;
     
+    /**
+     * Constructs a new GuiControllerSlowMotionManager.
+     * 
+     * @param guiController the GuiController instance to manage slow motion for
+     */
     GuiControllerSlowMotionManager(GuiController guiController) {
         this.guiController = guiController;
     }
     
+    /**
+     * Applies the slow motion power-up effect.
+     * Slows down the game timeline to half speed for 10 seconds and displays
+     * a countdown timer. Automatically reverts to normal speed when the effect expires.
+     */
     void applySlowMotion() {
         if (guiController.timeLine == null || guiController.isPause.getValue() || guiController.isGameOver.getValue()) {
             return;

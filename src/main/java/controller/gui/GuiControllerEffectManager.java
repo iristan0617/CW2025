@@ -7,8 +7,11 @@ import javafx.scene.control.Label;
 import javafx.util.Duration;
 
 /**
- * Manages visual effects for GuiController
- * Extracted from GuiController to reduce file size
+ * Manages visual effects for GuiController.
+ * Handles boom/explosion effects for bomb power-ups and board centering calculations.
+ * Extracted from GuiController to apply Single Responsibility Principle.
+ * 
+ * @author COMP2042 Coursework
  */
 class GuiControllerEffectManager {
     
@@ -16,10 +19,19 @@ class GuiControllerEffectManager {
     
     private final GuiController guiController;
     
+    /**
+     * Constructs a new GuiControllerEffectManager.
+     * 
+     * @param guiController the GuiController instance to manage effects for
+     */
     GuiControllerEffectManager(GuiController guiController) {
         this.guiController = guiController;
     }
     
+    /**
+     * Centers the game board within its parent container.
+     * Calculates the optimal position to center the board both horizontally and vertically.
+     */
     void centerGameBoard() {
         javafx.scene.layout.Pane root = (javafx.scene.layout.Pane) guiController.gameBoard.getParent();
         javafx.geometry.Bounds b = guiController.gameBoard.getBoundsInParent();

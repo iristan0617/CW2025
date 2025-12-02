@@ -8,6 +8,14 @@ import view.NextShapeInfo;
 
 import java.awt.*;
 
+/**
+ * Implementation of the game board for Tetris.
+ * Manages the game state including the game matrix, current brick position,
+ * score tracking, power-up management, hold piece functionality, and bomb piece effects.
+ * Handles all core game mechanics including movement, rotation, line clearing, and collision detection.
+ * 
+ * @author COMP2042 Coursework
+ */
 public class SimpleBoard implements Board {
 
     private final int width;
@@ -22,6 +30,13 @@ public class SimpleBoard implements Board {
     private boolean canHold = true; // Can only hold once per piece placement
     private boolean isBombPiece = false; // Flag for bomb piece power-up
 
+    /**
+     * Constructs a new SimpleBoard with the specified dimensions.
+     * Initializes the game matrix, brick generator, rotator, score, and power-up manager.
+     * 
+     * @param width the width of the game board
+     * @param height the height of the game board
+     */
     public SimpleBoard(int width, int height) {
         this.width = width;
         this.height = height;

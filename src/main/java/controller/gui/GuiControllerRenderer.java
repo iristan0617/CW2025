@@ -11,8 +11,12 @@ import model.MatrixOperations;
 import model.ViewData;
 
 /**
- * Handles rendering logic for GuiController
- * Extracted from GuiController to reduce file size
+ * Handles rendering logic for GuiController.
+ * Manages all visual rendering including the game board, current brick, next piece
+ * preview, hold piece preview, ghost piece projection, and board centering calculations.
+ * Extracted from GuiController to apply Single Responsibility Principle.
+ * 
+ * @author COMP2042 Coursework
  */
 class GuiControllerRenderer {
     
@@ -20,10 +24,22 @@ class GuiControllerRenderer {
     
     private final GuiController guiController;
     
+    /**
+     * Constructs a new GuiControllerRenderer.
+     * 
+     * @param guiController the GuiController instance to render for
+     */
     GuiControllerRenderer(GuiController guiController) {
         this.guiController = guiController;
     }
     
+    /**
+     * Initializes the game view with the board matrix and current brick.
+     * Sets up the display matrix and renders the initial game state.
+     * 
+     * @param boardMatrix the 2D array representing the game board
+     * @param brick the current brick's view data
+     */
     void initGameView(int[][] boardMatrix, ViewData brick) {
         guiController.currentBoardMatrix = boardMatrix;
         guiController.displayMatrix = new Rectangle[boardMatrix.length][boardMatrix[0].length];
